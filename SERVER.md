@@ -113,7 +113,7 @@ Environment overrides: `SWARMLAB_DATABASE_URL` (switches to PostgreSQL), `SWARML
 }
 ```
 
-`type` is `anthropic`, `openai` (any OpenAI-compatible server or gateway), `openrouter` or `mock`. The options mean the same as in the extension (see the README, section 3). Agents without tool calling: set `"toolMode": "text"` in `defaults.settings` or per agent in `.swarmlab/policy.json`.
+`type` is `anthropic`, `openai` (any OpenAI-compatible server or gateway), `openrouter` or `mock`. The options mean the same as in the extension (see the MANUAL.md, section 3). Agents without tool calling: set `"toolMode": "text"` in `defaults.settings` or per agent in `.swarmlab/policy.json`.
 
 ### 4.3 Repositories
 
@@ -258,7 +258,109 @@ Download a file with `GET /v1/jobs/{id}/artifacts?name=files/docs/orders.md` (or
 
 Each job reads the repository's own `.swarmlab/` folder (on the job's branch): `policy.json` (agents, tools, folders), `prompts/`, `graph.json` (the `default` workflow) or `workflows/<name>.json`, and skills (`.swarmlab/skills/`, `.claude/skills/`). Configure agents in VS Code, commit `.swarmlab/`, and the server uses the same team. Memory (board and notes) is kept per repository in `dataDir/memory/`.
 
+### 4.11 Decision model (optional)
+
+A decision model such as Jev answers typed decisions (a choice, a score, a yes/no) instead of a full model reply: workflow `decide` steps, run mode `auto`, the cheaper model for simple messages, skipping code search, and a hint on command approvals. Off unless configured; when it is unsure (below `minConfidence`) or fails, jobs run exactly as without it. It never approves anything.
+
+```json
+"decisions": {
+  "enabled": true,
+  "provider": "openrouter",
+  "model": "jev-latest",
+  "apiKeyEnv": "OPENROUTER_API_KEY",
+  "minConfidence": 0.5,
+  "points": { "graph": true, "runMode": true, "cascade": true, "ragGate": true, "commandHint": true }
+}
+```
+
+`provider`: `openrouter` (OpenRouter's System One API), `typesafe` (TypeSafe directly), `custom` (any System One server: set `baseUrl`, the part before `/v1/systemone`, for example a LiteLLM proxy), or `chat-model` (the worker model answers as JSON; no key). Workflow `decide` steps work without this section too: the worker model answers them. Every decision is an event (`kind: "decision"`) in the job's stream. `swarm-lab check` reports a missing key variable.
+
+### 4.15 A job configured by its script
+
+```json
+{
+  "repo": "app", "mode": "swarm", "task": "Map the structure of this project",
+  "policy": { "agents": { "reviewer": { "model": "claude-sonnet-5-5", "tools": ["list_files", "read_file", "search_text"] }, "writer": { "editPaths": [".swarmlab/out/**"] } } },
+  "prompts": { "roles": { "swarm-lead": "…" }, "agents": { "reviewer": "Be concrete: name files and lines." } },
+  "memory": { "session": "q4-audit", "topics": ["auth"] },
+  "settings": { "maxAgents": 4 }, "labels": { "team": "core" }
+}
+```
+
+`policy` and `prompts` apply to this job only, over the repository's `.swarmlab/` files; they are checked when the job is submitted (an unknown role, a malformed agent, a prompt over 40,000 characters is refused with the reason). `memory`: jobs with the same `session` share memory (the progress note of the last job, its items, relevant topic and project items, within `memory.budgetTokens`); `false`: none. Server default: `"memory": { "mode": "notes" }` (the per-repository notes of earlier versions); `"scoped"` gives every job its own session (or the one it names); `"off"`. Scoped memory is kept per repository in `dataDir/memory-scoped/`.
+
+### 4.17 Profiles, MCP, skills, checks, hooks per job
+
+```json
+"mcpAllowHosts": ["mcp.internal.example"],
+"hooks": { "allowHosts": ["hooks.internal.example", "127.0.0.1"] }
+```
+
+`PUT /v1/profiles/{name}` (role `approve` or `admin`) saves a configuration; `GET /v1/profiles`, `GET /v1/profiles/{name}`, `DELETE /v1/profiles/{name}` (admin). A job with `"profile": "name"` is merged with it when submitted (the job wins; skills by name; hooks and MCP servers add up) and stored merged. Per job (or profile): `mcp` (`use`: servers of `mcp` in this configuration; `add`: by URL, host in `mcpAllowHosts`; a local `command` only with an admin key), `skills`, `checks` (`tests`, `verify`, `retry`), `models` (`auto`), `hooks` (URL hosts in `hooks.allowHosts`; MANUAL.md, section 33). Before-hooks run before the allow-list and before approvals: a deny always wins.
+
+### 4.16 Reports
+
+Each job writes `report.md` and `report.json` (artifacts): every step with its tokens, cost and time, totals by agent and by model, files, memory, the independent check; its result keeps `usage.byModel` and `usage.byAgent`. `GET /v1/jobs/{id}/report` returns the Markdown (`?format=json` the data). `GET /v1/reports?groupBy=day|mode|model|repo|key|status|all|label:<name>&from=&to=&label=name=value&repo=&format=json|csv|md` sums tokens, cost, successes and time across jobs (yours; everyone's with `admin` or `approve`). Costs use the prices of `models.pool`.
+
+### 4.14 Experiments (optional limits)
+
+```json
+"experiments": { "maxConcurrency": 16, "maxRuns": 2000, "maxRunning": 2, "requireLimit": true }
+```
+
+`maxConcurrency`: the most runs at once in one experiment (default 16); `maxRuns`: the most runs in one experiment (default 2,000); `maxRunning`: experiments running together on this server (default 2); `requireLimit`: refuse experiments without `maxCostUsd` or `maxTokens`. Experiments run in the API process (`serve` or `api`) on repositories from `repos`; they are stored in `dataDir/experiments/` (one that was running when the server stopped is marked stopped). Each run's cost uses the prices of `models.pool`.
+
+### 4.13 Actions that cannot be undone
+
+Commands such as `rm -rf`, `git push --force`, `DROP TABLE`, `kubectl delete`, `terraform apply`, cloud deletes, deploys and package publishing (MANUAL.md, section 28.3) always wait for an approval, even with `"commands": "auto"` or on the allow-list; connected tools whose name says they delete, deploy, send or pay too, even with `"mcp": "auto"`. Cancelling a job closes its pending approvals at once.
+
+### 4.12 Automatic model choice (optional)
+
+```json
+"models": {
+  "auto": "cheapest",
+  "pool": [
+    { "id": "small-model-id", "tier": "small", "input": 0.15, "output": 0.6 },
+    { "id": "big-model-id", "tier": "large", "input": 3, "output": 15 }
+  ]
+}
+```
+
+Each agent turn of a job uses the cheapest model of the size class its task needs (MANUAL.md, section 26). Without `pool`, the provider's worker model is small and its lead model large. Prices (USD per million tokens) let it pick the cheapest of a class and give jobs and benches their cost. `"escalate": false` turns off the move to a bigger model after a failure. In `swarm-lab bench`, setups with `"leadModel": "auto:cheapest"` (or `balanced`, `best`) use it.
+
 ---
+
+### 4.18 Data for jobs
+
+A job may name data its agents read, and a folder for results: `"data": { "inputs": ["data/labels.csv", "/srv/datasets/q3/"], "output": "results/" }`. Relative paths start in the job's workspace. Agents get `list_data`, `read_data` (CSV, Excel, Word, PDF, PowerPoint, notebooks, ZIP, pictures) and `write_output`, as in VS Code (MANUAL.md, section 34). Results saved inside the job's workspace come back with the job's files when `files` is on (the default for jobs without a repository).
+
+Paths outside the job's workspace are refused unless they are inside one of the server's data folders:
+
+```json
+"data": { "roots": ["/srv/datasets"], "images": true, "write": "auto" }
+```
+
+`write`: `auto` (new files are saved; overwriting waits for an approval), `ask` (every save waits), `off`. A job with a path outside `roots` is refused when it is submitted (400), not later in a worker.
+
+### 4.19 Workers and model calls, live
+
+`workers.concurrency` (jobs at once in this process) and `workers.maxParallelCalls` (model calls at once across those jobs; 0 = no limit) change while the server runs:
+
+```bash
+curl -s $URL/v1/workers -H "Authorization: Bearer $ADMIN_KEY"                       # current limits, running and waiting calls
+curl -s -X PUT $URL/v1/workers -H "Authorization: Bearer $ADMIN_KEY" -H "Content-Type: application/json" \
+  -d '{"concurrency": 4, "maxParallelCalls": 6, "save": true}'                        # save: also write the configuration file
+```
+
+Admin keys only. Lowering a limit lets running jobs and calls finish. In VS Code: **Server** tab → **Jobs at once** / **Model calls at once**. A process started with `api` runs no workers and answers 409: change the limits on the worker processes.
+
+### 4.20 Web research for jobs
+
+```json
+"web": { "enabled": true, "search": "duckduckgo" }
+```
+
+`search`: `duckduckgo` (no key), `brave` or `tavily` (`"keyEnv": "SEARCH_KEY"`, the environment variable with the key), `searxng` (`"searxngUrl"`). Jobs get `web_search` and `fetch_url` unless they send `"web": false`; a job sending `"web": true` to a server without it is refused (400). Private addresses stay blocked unless `"allowPrivate": true`; `"blockHosts"` lists hosts never read.
 
 ## 5. API reference
 
@@ -415,6 +517,23 @@ The image contains Node, Git and Python. Add your projects' toolchains (for exam
 `SIGTERM` (for example `docker stop`) stops taking jobs, waits up to 10 seconds, and returns unfinished jobs to the queue for another worker.
 
 ---
+
+### swarm-lab experiment
+
+```bash
+swarm-lab experiment suite.json --repo app [--url http://127.0.0.1:8787] [--key KEY] [--concurrency N] [--max-cost USD] [--max-tokens N] [--label TEXT] [--no-wait]
+```
+
+Submits a bench suite to a running server as an experiment (MANUAL.md, section 31), prints its progress every few seconds and the summary per setup at the end (Ctrl+C stops it). The key (or `SWARMLAB_KEY`) needs the `submit` role. API: `POST /v1/experiments` `{ suite, repo, concurrency, maxCostUsd, maxTokens, label }` → 201; `GET /v1/experiments` (yours; all with `admin` or `approve`); `GET /v1/experiments/{id}` (progress and summary); `GET /v1/experiments/{id}/result` (every run with its checks); `POST /v1/experiments/{id}/cancel`.
+
+### swarm-lab bench
+
+```bash
+swarm-lab bench .swarmlab/bench/parser.json [--repo PATH] [--set-baseline] [--max-drop POINTS] [--json] [--config FILE]
+```
+
+Runs a bench suite (MANUAL.md, section 25) on a repository (default: the current folder) with the configured provider and decision model: every task × setup × repeat in its own Git worktree, unattended. It prints one line per setup (passed, pass rate, tokens, cost, time, and the difference with the baseline), saves the result in `PATH/.swarmlab/bench/results/`, and **exits with 1** when a setup's pass rate drops more than `--max-drop` points (default 0) below the baseline: a regression gate for CI when prompts, `policy.json` or workflows change. `--set-baseline` saves this run as the new baseline.
+
 
 ## 11. Tests
 
