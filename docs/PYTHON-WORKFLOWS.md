@@ -63,7 +63,7 @@ money; no live-model repair is claimed by these offline checks.
 
 ## 1. Download the starter files together
 
-Use Python 3.8 or newer; only the standard library is needed. Download these files
+Use Python 3.10 or newer; only the standard library is needed. Download these files
 from the public repository into the **same local folder**, preserving their names:
 
 - [swarmlab_client.py](../clients/python/swarmlab_client.py): API client.
