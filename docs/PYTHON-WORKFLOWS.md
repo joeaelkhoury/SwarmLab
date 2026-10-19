@@ -3,6 +3,64 @@
 [README](../README.md) · [Run modes](RUN-MODES.md) · [Manual](../MANUAL.md) ·
 [Server quickstart](../SERVER-QUICKSTART.md)
 
+## Fastest path: preview first, then run a real job
+
+**Already installed Swarm Lab?** You only need Python 3.8+ and the separate Python
+starter ZIP for the previews below. No pip install, Docker, or extension source is
+required. Extract the entire ZIP, keep demo_project intact, and open a terminal in
+the extracted folder (or clients/python in the public repository).
+
+### 1. Try it offline — no key or server
+
+```sh
+python workflow_demos.py --mode single --repo demo-app --dry-run
+python workflow_demos.py --mode tree --repo demo-app --dry-run
+python workflow_demos.py --mode swarm --repo demo-app --dry-run
+python workflow_demos.py --mode graph --repo demo-app --dry-run
+python -m unittest -v test_workflow_demos
+```
+
+These print job JSON and test the starter kit; they do not call a model or repair
+anything. Use python3 instead of python if that is your local interpreter command.
+
+### 2. Do the one-time setup for real jobs
+
+1. Follow [the complete demo setup](#7-complete-four-mode-repair-demo) to create a
+   fresh practice folder, commit the supplied fixture, and tag it demo-baseline.
+   The fixture intentionally starts with six tests and two failures.
+2. Open that practice folder in VS Code. In Swarm Lab Setup, configure a real
+   API/local provider and lead/worker models; test connection and tool calling.
+   VS Code language models are not supported by the standalone server.
+3. Choose Server → Start local server. Review its generated configuration and
+   start again if prompted. Verify the registered repo is demo-app, demo-baseline
+   is an allowed base ref, and required tools/test commands use human approvals.
+   Python must be available on the server PATH.
+4. Return the terminal to the extracted Python kit. For the default local server,
+   the scripts use http://127.0.0.1:8787. For another address or required access
+   key, follow the environment setup below; never put credentials in shared files.
+
+### 3. Submit one job and review it
+
+```sh
+python workflow_demos.py --mode single --repo demo-app --submit
+```
+
+Replace single with tree, swarm, or graph to try the other modes, one at a time.
+If the server requires python3, append --python-command python3. Each job starts
+from demo-baseline in its own worktree; worktrees are not security sandboxes.
+
+Copy the printed job ID into the follow-up command and choose an unused folder:
+
+```sh
+python fix_job.py --job-id YOUR_JOB_ID --out demo-single-01 --wait 180
+```
+
+Review pending approvals in Server/dashboard. If waiting or the local deadline
+expires, follow the same job ID again with a fresh output folder; do not resubmit.
+A submission is not completion. Check the patch and actual test output: a repaired
+fixture should have all six unchanged tests passing. Real provider usage may cost
+money; no live-model repair is claimed by these offline checks.
+
 ## 1. Download the starter files together
 
 Use Python 3.8 or newer; only the standard library is needed. Download these files
