@@ -220,7 +220,40 @@ In the browser, the dashboard (`http://127.0.0.1:8787/`) also has **↻ Restart 
 
 To work on more than one project with one server, open `swarmlab.server.json` and list each project under `"repos"` with its full path; then choose the project per job. After editing the file, click **↻ Restart**.
 
-## Troubleshooting
+## Troubleshooting (Windows)
+
+Most problems come from an old server still running. Check the version first; it must say 0.40.4:
+
+bat
+curl.exe -s http://127.0.0.1:8787/v1/health
+
+
+| What you see | Why | What to do |
+| --- | --- | --- |
+| 'code' is not recognized as an internal or external command | VS Code was installed without "Add to PATH" | Run the VS Code installer again, tick *Add to PATH*, then close and reopen the terminal |
+| 'git' is not recognized… | Git is not installed | Install *Git for Windows* from [git-scm.com](https://git-scm.com), keep the default options, then reopen the terminal |
+| python opens the Microsoft Store, or prints "Python was not found" | Windows' Store shortcut stands in for Python | Install Python from [python.org](https://www.python.org) and tick *Add python.exe to PATH; then **Settings → Apps → Advanced app settings → App execution aliases* and turn off *python.exe* and *python3.exe* |
+| Health shows an older version, or nothing changes after an update | An old server still runs on port 8787 | netstat -ano \| findstr :8787, note the number in the last column (the PID), then taskkill /PID <PID> /F; or *✕ Kill old server. Then **Start local server* |
+| "Port 8787 is already in use" | Another server or program holds the port | *✕ Kill old server*, or start on another port (Part 8) |
+| Agents say "no workspace tools are available" | *Tool calling* is Off | Setup → *Tool calling* → *Native, **Save settings, *↻ Restart** |
+| "Function tools with reasoning_effort are not supported" | An OpenAI GPT-5 model with reasoning on | Setup → *Reasoning effort* → none, *Save settings, *↻ Restart** |
+| A job stays *waiting* | It is asking you something | *Waiting for you on the server* (VS Code), *Waiting for you* (Studio), or type y in the Python terminal |
+| Test run "exited 9009" or "exited 1" with "is not recognized" | The job could not find Python | Fix Python as above (the Store shortcut), update to 0.40.4, restart the server |
+| "cannot resolve base reference HEAD" or a snapshot error | Old server; the folder has no Git history | Update to 0.40.4; better, give the folder a history (Part 2) |
+| *succeeded · ⚠️ not accepted* | The review rejected the work | Read the job's *Answer*, fix the cause, run again |
+| Studio: "Cannot reach the Swarm Lab server" | The server is stopped | Start it (Part 4), then reload the page |
+| Windows Firewall asks about "Node.js" or "Code" | The server opens a port on this computer | *Allow* on private networks; the server only listens on 127.0.0.1, so other computers cannot reach it |
+
+Still stuck? Save the job's events to your Desktop and send them along with the health line:
+
+bat
+curl.exe -s "http://127.0.0.1:8787/v1/jobs/<JOB_ID>/events?format=json" -o "%USERPROFILE%\Desktop\job-events.txt"
+
+
+In PowerShell, write the Desktop path as "$env:USERPROFILE\Desktop\job-events.txt" instead.
+
+
+## Troubleshooting (mac)
 
 Most problems come from an old server still running. Check the version first (`curl -s http://127.0.0.1:8787/v1/health`); it must say `0.40.4`.
 
