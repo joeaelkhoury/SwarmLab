@@ -195,6 +195,10 @@ In your own script, three lines are enough:
 from swarmlab import SwarmLab
 sl = SwarmLab.from_config("swarmlab-run/swarmlab.client.json")
 print(sl.run("Add input validation to pricing.py", mode="single").answer)
+
+## for no approval questions
+print(sl.run("Add input validation to pricing.py", mode="single",approvals="unattended").answer)
+
 ```
 
 Save it as `my_job.py` in the project folder and run it with `PYTHONPATH=swarmlab-run python3 my_job.py` (this tells Python where the library is).
