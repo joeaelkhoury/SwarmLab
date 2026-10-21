@@ -1,13 +1,13 @@
 # Swarm Lab for beginners: run a server and the Studio
 
 
-By the end of this guide you will have a Swarm Lab server running on your Mac and you will have run jobs from VS Code, from the Studio in your browser, and from Python. It takes about 30 minutes the first time. Every command is written out: copy it, paste it into Terminal, press Return.
+By the end of this guide you will have a Swarm Lab server running on your PC/Mac and you will have run jobs from VS Code, from the Studio in your browser, and from Python. It takes about 30 minutes the first time. Every command is written out: copy it, paste it into Terminal, press Return.
 
 ## Before you start:
 
 | Word | What it means |
 | --- | --- |
-| **Server** | A program on your Mac that runs AI agents for you in the background. It listens at the address `http://127.0.0.1:8787` (only your own computer can reach it). |
+| **Server** | A program that runs AI agents for you in the background. It listens at the address `http://127.0.0.1:8787` (only your own computer can reach it). |
 | **Job** | One piece of work you give the server, for example "fix the failing tests". It moves through *queued → running → succeeded* (or *failed*). |
 | **Agent** | An AI worker inside a job. It can read files, change files and run commands, depending on what you allow. |
 | **Project (repository)** | The folder the agents work on. It works best as a **Git** folder with at least one saved version (a *commit*). |
@@ -19,7 +19,7 @@ You need: a PC/Mac, an internet connection, and an API key from your AI provider
 
 ## Part 1: Install what you need
 
-You install three things once: VS Code, the developer tools (for Git), and the Swarm Lab extension. Python 3 is already on your Mac.
+You install three things once: VS Code, the developer tools (for Git), and the Swarm Lab extension.
 
 1. **Install VS Code.** Download it from [code.visualstudio.com](https://code.visualstudio.com), open the downloaded file, and drag **Visual Studio Code** into **Applications**.
 2. **Make the `code` command work in Terminal.** Open VS Code, press **Cmd+Shift+P**, type `shell command`, and choose **Shell Command: Install 'code' command in PATH**.
@@ -41,7 +41,6 @@ You install three things once: VS Code, the developer tools (for Git), and the S
    The second line must print `joe-el-khoury.swarm-lab@0.40.4`.
 5. **Quit VS Code completely** with **Cmd+Q**. Closing the window is not enough; quitting makes VS Code load the new version.
 
-Your Mac has `python3` but no `python` command. That is normal: inside jobs, the server makes both names work. In Terminal, always type `python3`.
 
 ## Part 2: Prepare a project folder
 
