@@ -13,7 +13,6 @@ By the end of this guide you will have a Swarm Lab server running on your PC/Mac
 | **Project (repository)** | The folder the agents work on. It works best as a **Git** folder with at least one saved version (a *commit*). |
 | **Approval** | A question the job asks you before doing something sensitive, such as running a command. The job waits until you answer. |
 | **Studio** | A web page of the server with ready-made workflows ("review changes", "fix a bug", …) you start with a few clicks. |
-| **Terminal** | The Mac app where you type commands. Open it with **Cmd+Space**, type `Terminal`, press Return. |
 
 You need: a PC/Mac, an internet connection, and an API key from your AI provider (OpenAI, Anthropic or OpenRouter).
 
