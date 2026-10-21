@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swarmlab"
+version = "0.40.0"
+description = "Run Swarm Lab agents, teams and workflows from Python: on a Swarm Lab server or on this machine."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "Joe El Khoury" }]
+dependencies = []
+classifiers = ["Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License", "Operating System :: OS Independent"]
+
+[project.urls]
+Homepage = "https://github.com/joeaelkhoury/SwarmLab"
+
+[project.scripts]
+swarmlab = "swarmlab.cli:main"
+
+[tool.setuptools]
+packages = ["swarmlab"]
+py-modules = ["swarmlab_client"]

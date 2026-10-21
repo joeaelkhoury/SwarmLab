@@ -72,7 +72,7 @@ class SwarmLabClient:
                checks: Optional[Dict[str, Any]] = None, hooks: Optional[List[Dict[str, Any]]] = None, models: Optional[Dict[str, Any]] = None,
                harness: Optional[Dict[str, Any]] = None, providers: Optional[Dict[str, Any]] = None,
                rag: Optional[str] = None, decision: Optional[str] = None, web: Optional[bool] = None,
-               data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+               data: Optional[Dict[str, Any]] = None, environment: Any = None) -> Dict[str, Any]:
         """Queue a job. Returns the job (status "queued"). The same idempotency_key returns the existing job.
 
         repo=None: a job without a repository (ideas, tickets, diagrams, documents) in a fresh empty workspace.
@@ -82,7 +82,9 @@ class SwarmLabClient:
         memory: {"session": "name", "topics": [...]} to share memory with the jobs of that session; False for none.
         profile: a saved configuration (put_profile) to start from; this job's own fields win.
         mcp: {"use": ["server-from-config"], "add": {"name": {"url": "http://..."}}}; skills: [{"name", "description", "instructions"}].
-        checks: {"tests": True | "pytest -q", "verify": True}; hooks: [{"url", "events": ["before:command", ...]}]; models: {"auto": "cheapest"}."""
+        checks: {"tests": True | "pytest -q", "verify": True}; hooks: [{"url", "events": ["before:command", ...]}]; models: {"auto": "cheapest"}.
+        environment: "auto" | "python" | "vscode-extension" | {"runtime": "docker", "image": "node:22", "setup": [...]} | False.
+        For a friendlier, typed API see the swarmlab package (from swarmlab import SwarmLab)."""
         # API uses singular decision; providers bind models to host-configured services.
         # Harness expansion and host permission/setting validation happen on the server.
         body: Dict[str, Any] = {"task": task, "priority": priority}
@@ -94,7 +96,7 @@ class SwarmLabClient:
                      ("labels", labels), ("webhook", webhook), ("idempotencyKey", idempotency_key),
                      ("maxAttempts", max_attempts), ("timeoutSec", timeout_sec), ("policy", policy), ("prompts", prompts), ("memory", memory),
                      ("profile", profile), ("mcp", mcp), ("skills", skills), ("checks", checks), ("hooks", hooks), ("models", models),
-                     ("harness", harness), ("providers", providers), ("rag", rag), ("decision", decision), ("web", web), ("data", data)):
+                     ("harness", harness), ("providers", providers), ("rag", rag), ("decision", decision), ("web", web), ("data", data), ("environment", environment)):
             if v is not None:
                 body[k] = v
         return self._request("POST", "/v1/jobs", body)
@@ -300,3 +302,29 @@ class SwarmLabClient:
 
     def repos(self) -> List[str]:
         return self._request("GET", "/v1/repos")["repos"]
+
+    def capabilities(self) -> Dict[str, Any]:
+        """What the server allows: modes, repositories, settings, workflows, environments, features."""
+        return self._request("GET", "/v1/capabilities")
+
+    def validate(self, spec: Dict[str, Any]) -> Dict[str, Any]:
+        """Check a job (the JSON of submit) without queueing it: {"valid", "errors", "spec"}."""
+        return self._request("POST", "/v1/validate", spec)
+
+    # ---------- saved workflows ----------
+
+    def put_workflow(self, name: str, workflow: Dict[str, Any]) -> Dict[str, Any]:
+        """Save a workflow ({"graph": {...}, "policy", "prompts", "environment", ...} or a bare graph); jobs use workflow=name."""
+        return self._request("PUT", f"/v1/workflows/{urllib.parse.quote(name)}", workflow)
+
+    def workflow(self, name: str) -> Dict[str, Any]:
+        return self._request("GET", f"/v1/workflows/{urllib.parse.quote(name)}")
+
+    def workflows(self) -> List[Dict[str, Any]]:
+        return self._request("GET", "/v1/workflows")["workflows"]
+
+    def delete_workflow(self, name: str) -> Dict[str, Any]:
+        return self._request("DELETE", f"/v1/workflows/{urllib.parse.quote(name)}")
+
+    def validate_workflow(self, workflow: Dict[str, Any]) -> List[str]:
+        return self._request("POST", "/v1/workflows/validate", workflow)["errors"]
