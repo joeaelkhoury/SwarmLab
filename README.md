@@ -6,7 +6,7 @@ Start with a conversation about your project. Move to a single-agent task when y
 want a bounded result, then explore teams or repeatable workflows when useful.
 You do not need to configure agents, workflows, or a server to begin.
 
-![Swarm Lab chat, with an answer and reviewable work](media/screenshot-chat.png)
+![Swarm Lab chat, with an answer and reviewable work](media/image.png)
 
 ## Public release: 0.42.4
 
