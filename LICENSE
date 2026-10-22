@@ -1,0 +1,64 @@
+Swarm Lab License (Source-Available)
+Version 1.0, 2026
+
+Copyright (c) 2026 Joe El Khoury. All rights reserved.
+https://github.com/joeaelkhoury/SwarmLab
+
+Swarm Lab ("the Software") is the original work of Joe El Khoury, who owns
+all copyright in it. This license applies to version 0.41.0 and later.
+Earlier versions keep the license they were released under.
+
+1. PERMITTED USE
+   You may, free of charge:
+   (a) install and use the Software, including the VS Code extension, the
+       server, and the Python client, for personal, educational, research,
+       or internal business purposes;
+   (b) read and study the source code;
+   (c) modify the Software for your own private use, as long as you do not
+       distribute the modified version.
+
+2. RESTRICTIONS
+   Without prior written permission from Joe El Khoury, you may NOT:
+   (a) copy, redistribute, republish, sell, sublicense, or rehost the
+       Software or any substantial part of it, in source or compiled form,
+       including re-uploading the VSIX to any marketplace or website;
+   (b) publish, distribute, or sell a modified version, fork, or
+       derivative work of the Software;
+   (c) present the Software, or any work derived from it, as your own, or
+       remove, alter, or hide any copyright notice, author credit, this
+       license, or the NOTICE file;
+   (d) use the names "Swarm Lab" or "Joe El Khoury" to endorse or promote
+       another product.
+
+3. ATTRIBUTION
+   Any permitted mention, review, article, talk, or academic use that
+   describes or builds on the Software must credit:
+       "Swarm Lab by Joe El Khoury (https://github.com/joeaelkhoury/SwarmLab)"
+   See CITATION.cff for a citation format.
+
+4. CONTRIBUTIONS
+   If you send a contribution (such as a pull request), you agree that
+   Joe El Khoury may use, modify, and license it as part of the Software
+   under any terms.
+
+5. THIRD-PARTY COMPONENTS
+   Bundled third-party components (for example highlight.js, mermaid,
+   undici, pg) remain under their own licenses, listed in their notice
+   files. This license does not change those terms.
+
+6. PERMISSIONS AND CONTACT
+   To request permission for any use not granted above, open an issue at
+   https://github.com/joeaelkhoury/SwarmLab/issues or contact the author.
+
+7. TERMINATION
+   Any use that breaks these terms ends your rights under this license
+   automatically.
+
+8. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
