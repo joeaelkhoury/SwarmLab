@@ -180,4 +180,49 @@ If something fails, open **Check → Check everything** and **View → Output �
 For an issue, include your extension version, editor/OS, provider type, sanitized
 error, and reproduction steps. Never include keys, sensitive prompts, or private logs.
 
+## 9. Commands
+
+## Chat commands
+
+| Command | What it does |
+|---|---|
+| /single <task>, /tree <task>, /swarm <task>, /graph <task> | Start a run; follow it in the *Run* tab |
+| /remote single\|tree\|swarm\|graph [--no-repo] [--repo NAME] [--files\|--no-files] [--workflow NAME] [--agent NAME] <task> | Run it on the Swarm Lab server; the answer and its files come back to the chat |
+| /ask <agent> <question> | Ask an agent of the last run |
+| /review [working\|<branch>] | Review your changes: the working tree or a branch |
+| /task <title>[: instructions] | Start a task on its own thread (*Tasks* tab) |
+| /task later <title> | Put a task in *Up next*, waiting for your go-ahead |
+| /tasks | Open the *Tasks* tab |
+| /report <topic>, /slides <topic>, /analysis <topic> | A quick document in one answer |
+| /ste [procedure\|description\|rewrite\|report] <topic or text> | Write in ASD-STE100 Simplified Technical English |
+| /stecheck | Check the last answer against ASD-STE100 |
+| /stereport [sections] <topic> | A long ASD-STE100 report from your attached files, with citations, diagrams and references |
+| /livedeck [ste] [slides] <topic> | A presentation you can change while it is written; Save as PowerPoint |
+| /build <file> <what> | A file planned and written part by part; an HTML page is checked in the browser and fixed |
+| /screenshot <path or address> [phone] [window] | A screenshot of a workspace file, a local server or a web page |
+| /remember <fact> | Save a fact to memory |
+| /new | Start a new chat |
+| /help | List the commands |
+| @ | Attach a file, or send the message to one of your agents |
+
+You can also just ask in the chat, for example put these on the task list: … or take a screenshot of site/index.html at phone size.
+
+## Options
+
+Set these in the chat settings drawer, or in *Setup → Chat and tasks. The ⚡ **Auto* button next to Send switches Work on its own.
+
+| Option | Choices | Default |
+|---|---|---|
+| Work on its own (⚡ Auto) | Off · Edits (edits apply, commands ask) · Everything (no review; continues up to 3 times at the step limit). Anything that cannot be undone still asks. | Off |
+| Cited answers | Off · Code (file and lines) · Everything (also pages, slides and web pages). Each citation is checked: ✓ read · ⚠️ check it · ✕ not found | Off |
+| Show tokens live | On · Off | On |
+| Helpers for smaller models | Off · Recommended (models in your list) · All models; each helper can be switched on or off | Off |
+| File details to the model | What a citation needs · All details · None | What a citation needs |
+| Record answer outcomes | On · Off (no message text, numbers only) | On |
+| Browser | Agents can use the browser · Internet pages too · Browser path | On · On · empty (found automatically) |
+| /build | Parts (2–16) · Browser checks for HTML (0–3) | 8 · 1 |
+| /stereport | Sections (3–12) · Repair passes (0–2) · Web pages as sources · Pages to read (0–6) · Author | 6 · 1 · On · 3 · empty |
+| /livedeck | Slides (4–25) | 10 |
+| Tasks | The assistant can create tasks · Tasks working at once (1–4) | On · 1 |
+
 **License:** [MIT](LICENSE). Retain applicable third-party notices when redistributing.
