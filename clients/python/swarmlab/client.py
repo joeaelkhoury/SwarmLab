@@ -67,6 +67,7 @@ _FIELDS = {
     "repo": "repo", "mode": "mode", "files": "files", "ref": "ref", "priority": "priority", "webhook": "webhook", "labels": "labels",
     "max_attempts": "maxAttempts", "timeout_sec": "timeoutSec", "idempotency_key": "idempotencyKey", "policy": "policy", "prompts": "prompts",
     "profile": "profile", "skills": "skills", "hooks": "hooks", "harness": "harness", "providers": "providers", "web": "web",
+    "isolation": "isolation",  # "venv" | "docker" | "existing" | "machine": where the job's commands run (deleted at its end)
 }
 _MODES = ("single", "tree", "swarm", "graph", "auto")  # auto: the server picks one for the task (Result.chosen_mode)
 _LEAD_ROLE = {"single": "single", "tree": "tree-lead", "swarm": "swarm-lead"}
@@ -104,6 +105,8 @@ def build_spec(task: str, *, agent: Union[Agent, str, None] = None, agents: Opti
     if unknown:
         raise SpecError(f"unknown parameter(s) {', '.join(sorted(unknown))}. Job fields: {', '.join(sorted(list(_FIELDS) + ['agent', 'agents', 'workflow', 'environment', 'settings', 'approvals', 'checks', 'memory', 'data', 'mcp', 'models', 'rag', 'decision', 'prompt', 'extra']))}; "
                         f"settings: {', '.join(SETTINGS_FIELDS)} (or max_steps, budget, max_tokens). Fields not listed: extra={{...}}.")
+    if "isolation" in spec and spec["isolation"] not in ("machine", "existing", "venv", "docker"):
+        raise SpecError(f"isolation must be one of machine, existing, venv, docker, not {spec['isolation']!r}")
     if "mode" in spec and spec["mode"] not in _MODES:
         raise SpecError(f"mode must be one of {', '.join(_MODES)}, not {spec['mode']!r}")
     if sett:

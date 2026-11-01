@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swarmlab"
-version = "0.42.4"
+version = "0.43.15"
 description = "Run Swarm Lab agents, teams and workflows from Python: on a Swarm Lab server or on this machine."
 readme = "README.md"
 requires-python = ">=3.8"

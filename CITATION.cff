@@ -5,7 +5,7 @@ type: software
 authors:
   - family-names: "El Khoury"
     given-names: "Joe"
-version: "0.42.4"
-date-released: "2026-10-22"
+version: "0.59.1"
+date-released: "2026-11-01"
 repository-code: "https://github.com/joeaelkhoury/SwarmLab"
 license-url: "https://github.com/joeaelkhoury/SwarmLab/blob/main/LICENSE"

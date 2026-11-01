@@ -1,4 +1,4 @@
-# Public release checklist: 0.42.4
+# Public release checklist: 0.43.15
 
 Canonical repository: <https://github.com/joeaelkhoury/SwarmLab>.
 Publisher remains **joe-el-khoury**. This checklist is a publication plan; it does
@@ -6,9 +6,10 @@ not assert any upload has occurred. Do not push or upload as part of docs editin
 
 ## Distribution scope
 
-The current public release provides an installable VSIX, documentation, and Python
-client/examples. Extension source code will follow in a later update. Do not
-promise a buildable public source checkout or ask beginners to run npm there.
+The public release provides an installable VSIX, documentation, the Python client and
+examples, and the extension source code under the source-available Swarm Lab License.
+Users install the VSIX; building from source is for review and maintenance, and is not
+required to use Swarm Lab.
 The native server is available through the installed extension's Server tab;
 Docker is optional, not a requirement for Python use.
 
@@ -28,16 +29,11 @@ application so their direct links/imports remain useful:
 ```text
 README.md
 LICENSE
-NOTICE.md
-CITATION.cff
-CHANGELOG.md
 MANUAL.md
 SERVER.md
 SERVER-QUICKSTART.md
 MIGRATING.md
 media/screenshot-chat.png
-media/tasks.png
-docs/DOCUMENTS.md
 docs/GETTING-STARTED.md
 docs/PYTHON-WORKFLOWS.md
 docs/RUN-MODES.md
@@ -78,7 +74,7 @@ boundary explicitly. Check retained reference links before publication.
 
 ## Release assets, not Git files
 
-- Attach the locally prepared 0.42.4 VSIX to a GitHub Release, rather than committing
+- Attach the locally prepared 0.43.15 VSIX to a GitHub Release, rather than committing
   it to Git. A checksum may accompany the asset.
 - Verify the actual filename, version, publisher, installability, bundled native
   server, license, and third-party notices before uploading.
@@ -135,8 +131,8 @@ required license notices while reducing package contents.
 ## Pre-upload review
 
 - [ ] GitHub URLs use the canonical case above; publisher ID is unchanged.
-- [ ] Version is 0.42.4; LICENSE is the Swarm Lab License; NOTICE.md and CITATION.cff are included.
-- [ ] README clearly states the source publication intention without claiming an upload.
+- [ ] Version is 0.43.15; LICENSE is the Swarm Lab License; NOTICE.md and CITATION.cff are included.
+- [ ] README states that the source is published under the Swarm Lab License (source-available, not open source).
 - [ ] Every allowlisted file exists; screenshot and starter-guide links resolve.
 - [ ] Downloaded Python neighbors import together without any source-tree imports.
 - [ ] Run offline list/dry-run checks from the starter folder, without a server.

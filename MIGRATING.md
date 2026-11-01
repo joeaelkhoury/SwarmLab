@@ -1,5 +1,8 @@
 # Moving to Swarm Lab from Cline, Roo Code or Continue
 
+> Since 0.58, Swarm Lab also reads `AGENTS.md`, `CLAUDE.md`, `.cursorrules` and `.github/copilot-instructions.md` at the
+> root of your folder as project rules, with nothing to copy (setting `swarmLab.rules.agentFiles`).
+
 Most of your setup moves over with one command. This page shows where each old setting goes, and what is different.
 
 ## The one command

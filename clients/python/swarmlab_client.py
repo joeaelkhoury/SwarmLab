@@ -75,7 +75,7 @@ class SwarmLabClient:
                checks: Optional[Dict[str, Any]] = None, hooks: Optional[List[Dict[str, Any]]] = None, models: Optional[Dict[str, Any]] = None,
                harness: Optional[Dict[str, Any]] = None, providers: Optional[Dict[str, Any]] = None,
                rag: Optional[str] = None, decision: Optional[str] = None, web: Optional[bool] = None,
-               data: Optional[Dict[str, Any]] = None, environment: Any = None) -> Dict[str, Any]:
+               data: Optional[Dict[str, Any]] = None, environment: Any = None, isolation: Optional[str] = None) -> Dict[str, Any]:
         """Queue a job. Returns the job (status "queued"). The same idempotency_key returns the existing job.
 
         repo=None: a job without a repository (ideas, tickets, diagrams, documents) in a fresh empty workspace.
@@ -87,6 +87,7 @@ class SwarmLabClient:
         mcp: {"use": ["server-from-config"], "add": {"name": {"url": "http://..."}}}; skills: [{"name", "description", "instructions"}].
         checks: {"tests": True | "pytest -q", "verify": True}; hooks: [{"url", "events": ["before:command", ...]}]; models: {"auto": "cheapest"}.
         environment: "auto" | "python" | "vscode-extension" | {"runtime": "docker", "image": "node:22", "setup": [...]} | False.
+        isolation: "venv" | "docker" | "existing" | "machine": where the job's commands run ("venv" and "docker" are deleted at the end of the job; "existing" uses the server's existing environment as is; "existing" and "machine" need an admin key by default).
         For a friendlier, typed API see the swarmlab package (from swarmlab import SwarmLab)."""
         # API uses singular decision; providers bind models to host-configured services.
         # Harness expansion and host permission/setting validation happen on the server.
@@ -99,7 +100,7 @@ class SwarmLabClient:
                      ("labels", labels), ("webhook", webhook), ("idempotencyKey", idempotency_key),
                      ("maxAttempts", max_attempts), ("timeoutSec", timeout_sec), ("policy", policy), ("prompts", prompts), ("memory", memory),
                      ("profile", profile), ("mcp", mcp), ("skills", skills), ("checks", checks), ("hooks", hooks), ("models", models),
-                     ("harness", harness), ("providers", providers), ("rag", rag), ("decision", decision), ("web", web), ("data", data), ("environment", environment)):
+                     ("harness", harness), ("providers", providers), ("rag", rag), ("decision", decision), ("web", web), ("data", data), ("environment", environment), ("isolation", isolation)):
             if v is not None:
                 body[k] = v
         return self._request("POST", "/v1/jobs", body)

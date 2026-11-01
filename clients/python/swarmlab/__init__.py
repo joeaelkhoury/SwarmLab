@@ -15,7 +15,7 @@ from .client import Job, JobFailed, Result, SwarmLab, SwarmLabError, build_spec,
 from .spec import Agent, Approvals, Checks, Data, Environment, Hook, Mcp, Memory, Models, Providers, Settings, Skill, SpecError, VSCode
 from .workflow import Workflow, validate_graph
 
-__version__ = "0.42.4"
+__version__ = "0.50.0"
 __all__ = ["SwarmLab", "Job", "Result", "SwarmLabError", "JobFailed", "SpecError", "build_spec", "find_server",
            "Agent", "Workflow", "Environment", "VSCode", "Settings", "Approvals", "Checks", "Memory", "Data", "Skill", "Hook", "Mcp",
            "Models", "Providers", "validate_graph", "__version__"]

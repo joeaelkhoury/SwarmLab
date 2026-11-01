@@ -100,6 +100,20 @@ Saves require workspace trust and modal confirmation. Cancellation, validation e
 37. [Edit an answer, a code block or a diagram](#37-edit-an-answer-a-code-block-or-a-diagram)
 38. [Edit a picture before you send it](#38-edit-a-picture-before-you-send-it)
 39. [Web research (on or off)](#39-web-research-on-or-off)
+52. [The Lab: GPU or CPU, apps, training runs and their results](#52-the-lab-gpu-or-cpu-apps-training-runs-and-their-results)
+53. [Metadata filters on code search](#53-metadata-filters-on-code-search)
+54. [Web pages: source type and dates](#54-web-pages-source-type-and-dates)
+55. [Pasted text, the message editor and Access](#55-pasted-text-the-message-editor-and-access)
+56. [The message box (0.45)](#56-the-message-box-045)
+57. [Refine a harness](#57-refine-a-harness)
+58. [The panel: sidebar, Details, groups and views](#58-the-panel-sidebar-details-groups-and-views)
+59. [Language](#59-language)
+60. [Certificates (trust store)](#60-certificates-trust-store)
+61. [Review by conditions and inputs](#61-review-by-conditions-and-inputs)
+62. [Pictures inside attached files](#62-pictures-inside-attached-files)
+63. [Reminders and the Today page](#63-reminders-and-the-today-page)
+64. [The Atlas of your documents](#64-the-atlas-of-your-documents)
+65. [🩺 Check: why an answer is wrong](#65--check-why-an-answer-is-wrong)
 
 ---
 
@@ -216,7 +230,233 @@ The **lead model** is used by the chat assistant, the single agent and the leads
 
 ---
 
+### 3.8 Several model servers: connections (0.49)
+
+With **connections**, Swarm Lab uses several model servers side by side, each with its own address, settings and API
+key: Ollama on this machine, a company gateway, vLLM on a GPU box, OpenRouter… Open *Setup → Connections* (or
+**Swarm Lab: Connections**).
+
+1. Choose a starting point (Ollama, LM Studio, vLLM, LiteLLM or a gateway, Azure OpenAI, OpenAI, Anthropic, OpenRouter,
+   Groq, DeepSeek, Mistral, Together, Gemini, xAI, another server), **Add**, check the base URL, **Save connections**.
+2. **Key**: kept in VS Code's secret storage on this machine (never in settings) and sent only to that address. A server
+   on this machine needs none. Settings Sync copies connections, not keys: on another computer, Setup, the model picker
+   and the status bar say “key missing on this machine”.
+3. **⟳** asks the server for its models; keep the ones you use. They appear next to Send, grouped under the connection.
+4. **Test** asks for the model list and makes one tiny call.
+5. **⋯** shows the connection's proxy, key header (“api-key” for Azure-style gateways), reasoning effort, extra headers
+   and extra request fields.
+
+**Naming a model on a connection**: `@id/model`, for example `@ollama/qwen2.5-coder:7b` or
+`@openrouter/anthropic/claude-sonnet-5-5`. It works for the lead and worker models, the chat's model, the model list of
+automatic choice, the Atlas, embeddings (`swarmLab.rag.embeddingModel`), the decision model and fallbacks. A plain name
+goes to the **default connection**. So a team can have a cheap local worker (`@ollama/qwen2.5-coder:7b`) and a cloud
+lead (`@openrouter/…`). Prices, context windows and pictures go by the bare model name, and a server on this machine
+costs $0.
+
+**The default connection** is chosen next to Send (🔌), in the status bar, or in Setup, for every folder or *only for this
+workspace*. “Setup” is the classic *Model provider* fields below: until you choose another default, nothing changes.
+**Make the Setup fields a connection** copies them (key included) when you want to keep them as one of several.
+
+**Fallbacks** (one per line): when a model is down (rate limit, server error, no connection) after its own retries, the
+next is tried, and the chat says so. A real error, such as a refused key or an unknown model, is shown instead.
+
+**The local server** uses the default connection; its key is passed only when the server's provider is that connection.
+Models on other connections are sent with their bare name (and the log says so): the server has one provider.
+
+**Sharing**: **Export…** writes the connections without keys; **Import…** adds them (same id: replaced; fields that look
+like keys are refused). Migrating from Cline, Roo or Continue keeps every model server found in
+`.swarmlab/connections.json` and offers to add them.
+
+Connections are user settings only (`swarmLab.connections` cannot be set by a folder), so a cloned project cannot send
+your saved key to another address. The default (`swarmLab.connection`) and `swarmLab.fallbacks` can be set per workspace.
+
+### 3.9 Setup presets and the Essentials view (0.49)
+
+*Setup → Setup presets* (or **Swarm Lab: Apply a setup preset**) changes a few settings at once; you see each change
+before it applies:
+
+| Preset | What it sets |
+|---|---|
+| 🖥 Local model (Ollama) | Adds an Ollama connection (no key) and makes it the default, asks it which models lead and work, helpers for small models, answers in steps for small windows, 3 agents |
+| 💲 Cheap | Automatic choice “cheapest”, simple messages on the worker, short answers, $0.05 per message and $2 per day |
+| 🔐 Careful | You approve every edit and command, no auto-approve, the lead reviews, changes verified with tests, risky ones thought through first |
+| ↺ Back to the defaults | The settings above, back to Swarm Lab's defaults (connections and keys are kept) |
+
+**Essentials / Everything** at the top of Setup shows only presets, connections, the model, the engine, isolation,
+costs, safety and limits, or all settings.
+
+Under the message box, a chip says **where commands run** (🧪 venv, 🐳 Docker · net on/off, ⚠ no sandbox): click it to
+change it, turn Docker's network on or off, or reset the environments. **💲 This chat** shows what the conversation
+cost so far; click it for today, the month and the limits.
+
+### 3.10 One place for every model: Setup → Models (0.49.2)
+
+**Setup → Models** lists every model of every connection, and the roles are chosen from that list.
+
+1. **Connections** (above): add each server (OpenRouter, Ollama, a local gateway, your own URLs) and its key.
+2. **Models → ⟳ Models on this server**: pick a connection, ask its server; tap the models you use (or **Add all**), or
+   type a name and **Add**. **Save models**.
+3. **Roles**: choose from the lists, grouped by connection:
+
+| Role | What it does | Setting |
+|---|---|---|
+| Lead | Plans and leads runs; the single agent | `swarmLab.leadModel` |
+| Worker | Workers, sub-agents, summaries | `swarmLab.workerModel` |
+| Chat | The chat's model (also next to Send), or Auto · cheapest / balanced / best | `swarmLab.chat.model` |
+| Decisions | Off; the worker model as JSON; any model as JSON; or Jev and other System One servers (Decision model) | `swarmLab.decisions.*`, `swarmLab.decisions.chatModel` |
+| Embeddings | Code search by meaning (off: keywords only) | `swarmLab.rag.embeddingModel` |
+| Atlas: entities and relations | The Atlas's model pass: rules only, ask at each build, or with the model you choose | `swarmLab.atlas.model`, `swarmLab.atlas.extractModel` |
+
+4. **Automatic choice**: tick **Auto** on the models it may pick, check their size (or **Sizes by price**) and prices,
+   choose the strategy. **Fallbacks** are tried in order when a model is down.
+
+The classic *Model provider* fields are the built-in “Setup” connection, folded under Connections. A model on another
+connection is named `@id/model` in settings; in Setup you only pick it.
+
+### 3.11 Trying a reranker, and using it for code search (0.49.4)
+
+A reranker takes a question and some texts and scores how well each text answers it. Nothing changes until you choose
+one: code search works as before.
+
+1. **Its server**: in *Connections*, add **Cohere**, **Jina**, **Voyage**, **Text Embeddings Inference** (on this
+   machine), or your own server, and its key.
+2. **The model**: in *Models*, pick that connection, type the model's name (for example `rerank-v3.5`,
+   `jina-reranker-v2-base-multilingual`, `rerank-2`, or the model your TEI or vLLM server runs) and **Add**,
+   **Save models**. Do not tick **Auto** for it: automatic choice is for chat models.
+3. **Try it**: *Models → Try a reranker* (or **Swarm Lab: Try a reranker**). Choose the model, type a question, then
+   either your own texts (a blank line or `---` between them) or **What code search finds**, and **Rank**:
+
+| Column | What it shows |
+|---|---|
+| Rank | Its place in the reranker's order |
+| Before | Its place before (your order, or code search's), with ↑ or ↓ |
+| Score | The reranker's score, with a bar from the lowest to the highest |
+| Text | The text (for code search: the file and line, and whether keywords or meaning found it) |
+
+   Above the table: how many texts, how long it took, the model, how it was called and how many moved. *The server's
+   answer* shows the raw reply; **Copy the results** copies the table.
+4. **Use it** (optional): **Use it for code search**, or *Roles → Reranker*. The best *N* results of the usual search
+   (30 by default) go to the reranker and come back in its order. If it fails, the usual order is used. *Off* stops it.
+
+**How it is called**: *Cohere-style* (`query` and `documents` to `…/rerank`: Cohere, Jina, Voyage, vLLM, llama.cpp,
+Infinity, LiteLLM) or *TEI-style* (`query` and `texts`: Hugging Face text-embeddings-inference). *Auto* tries the first,
+then the second. The address is the connection's base URL followed by `/rerank` (a base that already ends in
+`/rerank` is used as it is).
+
+### 3.12 The reranker playground and campaigns (0.49.5)
+
+**One question, for developers.** In *Try a reranker*, the texts can be a JSON list (`["…"]` or
+`[{"id": "doc-12#3", "text": "…"}]`), JSON lines, a CSV with `id` and `text` columns, or paragraphs;
+`{"id": "x", "file": "docs/policy.pdf"}` reads a file of the folder. The results keep your ids. **Request options**:
+`top_n`, the longest text sent, `return_documents`, TEI's `raw_scores`, and more fields as JSON (none set: the request is
+as before). Under the results: **The request sent** (the key shown as `$RERANK_API_KEY`), **The same call as code**
+(curl, Python, JavaScript; **Copy as code**), **Copy as JSON** (`id`, `rank`, `before`, `index`, `score`) and **Scores
+0–1**.
+
+**Campaigns: many questions at once.** *Reranker campaign* (or **Swarm Lab: Reranker campaign**). A campaign is JSON:
+
+```json
+{
+  "name": "Invoices",
+  "documents": [{ "id": "round", "text": "The total is rounded to two decimals." }, { "id": "send", "file": "docs/billing.pdf" }],
+  "queries": [{ "id": "q1", "query": "How is the total rounded?", "relevant": ["round"] }],
+  "models": ["@cohere/rerank-v3.5"],
+  "params": { "topN": 10 }
+}
+```
+
+A question may have its own `documents`. **Import…** also reads JSON lines (one question per line) and a CSV of
+questions (`query`, `relevant` with ids separated by `|`). *Ranked against* can be **what code search finds** for each
+question (its best N): then `relevant` names files. **Cut files into chunks** cuts file texts as code search does (ids
+`<id>#1`, `<id>#2`…; a relevant file id counts for all its chunks). Tick the rerankers, **Run the campaign**:
+
+| Column | Meaning |
+|---|---|
+| Right first | Share of questions where a right text came first (hit@1) |
+| Top 3 | Share where a right text is in the first three |
+| MRR | Average of 1 / the rank of the first right text |
+| nDCG@10 | How high all the right texts are in the first ten (1 = perfect) |
+| Avg ms, p95 ms | Speed; Failed: calls that did not answer |
+
+**As given** (the texts in their order, or code search's order) is the baseline; the best reranker is starred. Per
+question you see where the right text came and the top 3. **Save** keeps the campaign in `.swarmlab/rerank/`;
+**Report** saves Markdown, CSV or JSON in `.swarmlab/rerank/reports/`.
+
+### 3.13 Chaining models: pipelines (0.50.0)
+
+A **pipeline** runs several models one after another on the same input. *Setup → Models → Try a pipeline* (or
+**Swarm Lab: Try a model pipeline**).
+
+1. **Add steps** and drag them into order. Each step is a model of any connection:
+
+| Step | What it does |
+|---|---|
+| Embeddings | Ranks the texts by meaning (an embedding model) |
+| Reranker | Reorders the texts (a reranker) |
+| Generate | Writes an answer from the top texts (any chat model) |
+| Decide | Returns a JSON object from the top texts |
+| Entities | Finds named entities in the top texts (NER) |
+
+   A ranking step can **keep** only its best N for the next step; a writing step uses the **top N** texts and an
+   instruction where `{context}` is those texts and `{query}` the question.
+2. **Question**, and the texts (your own, or what code search finds).
+3. **Run the pipeline**: you see each step's output — the order after it, or the answer it wrote — and the final answer.
+   A step that fails stops the chain and says why; the earlier steps' output is still shown.
+
+A common chain is **embeddings → reranker → generate**: embeddings narrow by meaning, the reranker reorders the best,
+and the model writes the answer from the top few. **Add to the campaign** turns a pipeline into a column in a reranker
+campaign (3.12), so you can compare, over many questions, a pipeline against a single reranker and against the texts as
+given — on ranking (hit@1, MRR, nDCG@10) and, when the pipeline writes answers, on how many pass each question's check.
+
+### 3.14 Comparing whole pipelines in the Playground (0.50.3)
+
+Open **Settings → Playground** (or **Swarm Lab: Open the model Playground**) and choose **Pipelines**.
+
+**Build.** Each pipeline is a chain drawn left to right: *Dataset → steps → Answer* (or *Ranking*). Add one from a
+preset or empty; insert a step with the **+** between two steps; reorder by dragging a step's title or with ‹ ›; remove
+with ×. Every step has a model (empty: the model of the matching Role), and a number: for embeddings and rerankers, how
+many documents it passes on; for generate, decide and entities, how many of the top documents go into the prompt as
+`{context}`. Generate and decide steps take an optional prompt with `{query}` and `{context}`.
+
+**Data.** Pipelines use the same dataset as Retrieval — queries, documents and the relevant (✓) labels — plus an
+optional **expected answer** per query: key words separated by commas (all must appear), expected JSON for a decide
+step, or entity names for an entities step. The judge also reads it as the reference answer.
+
+**Judge.** *Grade answers with an LLM judge* adds a 1–5 score and a one-line reason to every answer (one extra call per
+answer). Empty model: your decision model. Available in Generation too.
+
+**Results.** One row per pipeline: Hit@1, MRR, nDCG@k and Recall@k on the order the pipeline ends with (only for
+pipelines that rank), the answer check, the judge's average, and latency. Pick a query to see each pipeline's trace:
+every step with its time and the ids it kept (relevant in green), then the answer with its checks. *Data → Copy the
+results (CSV)* exports one row per pipeline and query.
+
+**Projects and history.** *Data → Save project as…* writes a `.playground.json` (default `.swarmlab/playground/`) with
+the dataset, every model and pipeline, the judge settings and the run history; after that, changes are saved to it
+automatically (Ctrl/Cmd+S saves too). Commit it to share or review changes. *Open a project or dataset…* reads it back,
+or a `{ "queries": [...], "documents": [...] }` dataset, or any file of documents. Every run is kept in **Run history**;
+the tables show the change since the previous run, or since any run you pick with *Compare*.
+
+
 ## 4. Chat
+
+### 4.0 Seeing and fixing attached files, and moving in a long chat (0.49.3)
+
+**Attached files.** Tap a file's name, in the message box or in a message you sent:
+
+| The file | What you see | What you can do |
+|---|---|---|
+| Text (code, Markdown, CSV, JSON…) | Its contents, editable | **Save to file** (Ctrl+S), **Revert**, **Undo the save** |
+| A document (PDF, Word, PowerPoint, Excel, notebook…) | What the model reads from it | **Open** it in its own program |
+| A picture | The picture, large | **✎ Edit the picture** |
+
+Files not sent yet also have **Replace…** and **Remove**; a message already sent has **Fix and resend** (change its
+files or text and send it again). Saving changes the file in your folder. A file that changed since you opened it (in
+the editor or by a run), or that has unsaved changes in an editor tab, is not overwritten.
+
+**Moving in a long chat.** While you read earlier messages, new ones do not pull you down: **⤓ N new** shows what
+arrived. Buttons at the bottom right: **☰** your messages to jump to, **⤒** top, **▲ ▼** one message up or down, **⤓**
+latest. Keys: **Alt+↑ / Alt+↓**, **Alt+Home / Alt+End**.
+
 
 ### 4.1 Talk
 
@@ -247,6 +487,28 @@ Type `/review` in the chat, or run **Swarm Lab: Review my branch or changes** (a
 - `/review --working` reviews what you have not committed yet.
 
 The answer is a table of findings by severity (🔴 high, 🟠 medium, 🟡 low) with file:line and the suggested fix, then a verdict (✅ ready, ⚠️ after fixes, ❌ needs rework). Nothing is edited. A very large diff is not pasted: the assistant reads the changed files instead.
+
+### 4.2b2 Security scan (/scan)
+
+`/scan` (the whole project), `/scan changed` (uncommitted changes) or `/scan <folder or file>`; also **Swarm Lab:
+Security scan** in the command palette and the Explorer's and editor's menus. The 🛡 card shows the plan and its estimated
+cost; **Start** runs it:
+
+1. The cheapest models of Models → automatic choice, from different vendors (`swarmLab.security.scanModels`,
+   `scanModelCount`, 2 by default), each read the code twice (`runsPerModel`) with severity criteria, a checklist of
+   vulnerability types and checks before reporting, plus your rules from `.swarmlab/security-rules.md`.
+2. Each model re-reads its own findings in a new conversation and may withdraw some (`selfCheck`).
+3. The findings are merged (same file, lines 3 or fewer apart, same type).
+4. A model from another vendor (`verifierModel`) confirms, rejects or is unsure about each one, withdrawn ones included,
+   and cannot add any (`verify`, `maxVerify`).
+
+On each finding: the file:line opens it; **🧪 Reproduce** (`reproduce`) has a model write a small test, opened beside the
+chat; after you approve it, it runs in the chat's isolation environment (never **machine**), and *confirmed* means it ran,
+exited 0 and printed the marker; **Dismiss…** asks why, and offers to add your reason as a project rule. Severity is the
+model's estimate. Calls count in today's spend; `maxCostUsd` ($5) stops a scan. Small models (`smallModels`, or 40B or
+fewer by name) also get call relationships (`callContext`). Files left out: `exclude`, generated or minified files, over
+`maxFiles` (the files with the most places worth a look come first). **Copy report** gives Markdown; scans are kept in
+`.swarmlab/security/`.
 
 ### 4.2c Attach files
 
@@ -579,6 +841,15 @@ Claude Code needs Claude models: directly, or through a gateway that speaks the 
 - **Off**.
 
 **Will it ask?** tells you what would happen for any command. Output goes to **View → Output → Swarm Lab**.
+
+Inline code for an interpreter (`python -c`, `node -e`, `bash -c`…) always asks, and allow-list entries that would let any
+code run (`python`, `bash`, `node`, `npx`, `env`, `sudo`…) are ignored: list the exact command instead (`python -m pytest`).
+Where commands run (this machine, a temporary virtual environment or a Docker container): [section 51](#51-isolation-where-commands-run).
+
+**Control files.** Agents never change Swarm Lab's own control files, whatever their **May edit** paths:
+`.swarmlab/policy.json`, `mcp.json`, `graph.json`, `environment.json`, `project.json`, rules, prompts, workflows, hooks,
+plans, `.claude/settings*.json` and `swarmlab.server.json`. You change them in the Agents, Prompts, Tools and Project
+tabs (Setup → Isolation → *Agents may not change Swarm Lab's control files*, on by default).
 
 ### 12.3 Agent-to-agent messages
 
@@ -1221,6 +1492,15 @@ Any run (single, tree, swarm, graph), the chat and server jobs can use **data**:
 
 Paths can be absolute, relative to the workspace, or `~/…`. The Run tab shows what each input holds (*folder: 12 files, 3.4 MB: table ×5, pdf ×2*) and warns about paths that do not exist.
 
+**Data files attached in the chat (0.43.15).** A CSV, TSV, Excel, JSON or Parquet file attached to a message reaches the
+model as a summary: its size, one line per column (type, missing values, range or most common values) and the first 50
+rows. So that no analysis comes from that sample, the message then carries a rule. With *Allow commands* on, the agent
+writes a script that reads the whole files (Python with pandas, or the csv module), runs it, answers from its output,
+fixes and reruns it when it fails, says which script produced each result, and saves new tables or charts to new files.
+With commands off, its answer starts by saying it rests on the summaries and the first rows only. The chat shows which
+applies (*data files attached: …*). Each command still needs your approval unless it is on your allow-list or *Work on
+its own* is *Everything*.
+
 **How agents use it.** Their instructions list their data with absolute paths, and they get three tools:
 
 | Tool | What it does |
@@ -1236,17 +1516,17 @@ To compute on data (statistics, joins, plots), agents write a script and run it 
 | Kind | What the agent gets |
 |---|---|
 | CSV, TSV | Rows × columns, a summary of every column (numbers: min, mean, max; text: distinct values, most common), then rows as a table |
-| Excel (.xlsx, .xlsm), OpenDocument | Every sheet with its summary and rows; `sheet` for one |
-| Word (.docx), .odt | The text with headings, lists and tables |
-| PDF | The text page by page (pages in order, fonts with Unicode maps, LaTeX ligatures); a scanned PDF says it needs OCR |
-| PowerPoint (.pptx) | Slide by slide: title, bullets, speaker notes |
+| Excel (.xlsx, .xlsm), OpenDocument | Every sheet with its summary and rows; `sheet` for one; pictures placed on the sheets |
+| Word (.docx), .odt | The text with headings, lists and tables, and the pictures in it (for models that can see) |
+| PDF | The text page by page (pages in order, fonts with Unicode maps, LaTeX ligatures), and the pictures on the pages read; a scanned PDF's pages go as pictures |
+| PowerPoint (.pptx) | Slide by slide: title, bullets, speaker notes, and each slide's pictures |
 | Jupyter notebooks | Cells with their language, outputs and errors; picture outputs are shown to the model |
 | JSON, JSONL, text and code | The content (JSON with its structure) |
 | ZIP, .gz, .tar | The list of files; `entry` reads one with the right reader (a Word file in a ZIP is read as Word) |
 | Pictures (PNG, JPEG, GIF, WebP) | The picture itself, for models that can see |
 | Legacy .doc, .xls, .ppt; Parquet, SQLite… | A clear message (save as .docx…, or read it with a script) |
 
-**Pictures.** With Anthropic and OpenAI-compatible providers, pictures go to the model; older pictures in a conversation become a one-line note so they do not cost tokens on every call. VS Code's models and models in text tool mode get a note instead. Turn pictures off with `swarmLab.data.images`.
+**Pictures.** Pictures go to the models that can see them, automatically (see [62](#62-pictures-inside-attached-files)); older pictures in a conversation become a one-line note so they do not cost tokens on every call. VS Code's models and models in text tool mode get a note instead. Turn pictures off with `swarmLab.data.images`.
 
 **Safety.** An agent reads only inside the workspace, its own data, and its output folder (symbolic links cannot lead outside them). It writes only inside its output folder: new files are saved, **overwriting asks you** (`swarmLab.data.write`: `auto`, `ask` for every save, or `off`). Big files are capped (150 MB to read, 20 MB to save through the tool); ZIP and PDF unpacking is capped against zip bombs.
 
@@ -1255,7 +1535,9 @@ To compute on data (statistics, joins, plots), agents write a script and run it 
 | `swarmLab.data.inputs` | `[]` | Files or folders for every agent (Run tab) |
 | `swarmLab.data.output` | `.swarmlab/out/data` | Where agents save results |
 | `swarmLab.data.write` | `auto` | `auto`: new files saved, overwriting asks · `ask`: every save asks · `off` |
-| `swarmLab.data.images` | `true` | Send pictures to models that can see |
+| `swarmLab.data.images` | `true` | Send pictures to models that can see (automatic) |
+| `swarmLab.data.visionModels` | `[]` | Models that see (`name`) or do not (`!name`), over what their names say |
+| `swarmLab.data.maxImages` | `8` | Most pictures with one message (0–20) |
 | `swarmLab.python` | empty | Python for the bundled scripts (`python3`, `py -3`, a venv's python) |
 
 On the **server**, a job takes `"data": { "inputs": [...], "output": "..." }`; paths outside the job's workspace must be inside the server's `data.roots` (see SERVER.md, 4.18).
@@ -1610,3 +1892,718 @@ it), and their text is marked as written by others, so instructions in it are no
 Attach files (＋ Files or @) to have them followed, for example your style sheet or a page to match. An existing
 file is improved, not ignored. **Stop** ends it.
 
+---
+
+## 48. Context windows per model (self-hosted models)
+
+Many self-hosted models (through LiteLLM, vLLM, Ollama…) have a small **context window** that the prompt and the
+answer **share**: with an 8,192-token window, a 6,000-token prompt leaves about 2,000 tokens for the answer. If more is
+asked, the server cuts the answer or refuses the call; some servers silently drop the start of the prompt.
+
+**You do not need to change the server.** By default (*Learn from the answers*), Swarm Lab learns each model's real
+window from its own answers (an answer cut short after a long prompt, a prompt the server counted shorter than it was,
+a "maximum context length is N" error), and from then on works **in steps**, as you would by hand in the chat:
+
+- **A long answer is written in steps.** When the answer is cut, the rest is asked for with a short prompt (the request
+  and the end of what is written), so each step has room again; the steps are joined into one answer (up to *Longest
+  answer, in steps*, 12 by default). This also finishes a tool call cut in the middle, so agents work in text-tool mode.
+- **A long input is read in parts, never cut.** A text that does not fit is read part by part: a request to change the
+  whole text (rewrite, translate, convert, fix, comment…) is done on each part in turn and the results are joined; any
+  other request gets notes from each part (code, names and numbers copied exactly) and is answered from the notes.
+- Calls that fit are sent unchanged. In the chat, *in steps:* lines show what happens. **Check the limits** lists each
+  model's window and where it came from; **Forget what was learned** starts again.
+- Text-tool mode also understands the tool-call formats models write on their own:
+  `<tool_call>name <arg_key>…</arg_key><arg_value>…</arg_value></tool_call>`, and `<tool_call>{json}</tool_call>`
+  (Qwen, Hermes and others).
+
+**Servers that say nothing (no token counts, no model info).** Learning from the answers needs the server's token
+counts. When the server sends none, Swarm Lab finds the limits itself and answers the way you would in the chat:
+
+- **A smoke test before the first use** (*Test new models*: before their first use, on by default; not done for
+  api.openai.com). The model is asked to write: first a numbered list after a short prompt (how far it gets is its
+  longest answer), then a word at the very start and one at the very end of texts of growing length, asked back in one
+  line (the longest text whose two words both come back is the longest prompt it really reads), then the list again
+  after a long prompt (a much shorter list means the prompt and the answer share one window). It takes about ten
+  short calls, once per model; the result is kept. **Test the limits** (Setup) or *Swarm Lab: Test model limits*
+  runs it again. *Test prompts up to* (32,768 tokens by default) is the largest text sent.
+- **Read first, then answer in parts** (*Answer long prompts in parts*: when needed). When the prompt is long for the
+  window, the model first reads it and says in one line what is asked, with the parts of its answer; then it writes the
+  answer part by part, each reply short enough to fit, ending with a mark that says whether more follows. The parts are
+  joined into one answer. A part that is cut is finished as the next part; a part that fails (502, timeout, empty
+  answer) is asked again in halves: part 1 → 1.1 and 1.2 → 1.1.1 … *Always* does this for every answer without tools.
+- **Tried again, smaller, until it fits** (*Tries when a call fails*, 4). A call that fails because of its size (502,
+  504, 413, timeout, "context too long", an empty answer) is not sent again unchanged: first a shorter answer is asked,
+  then the prompt is made smaller (long texts read in parts), and the smaller size is kept for next time. Rate limits
+  (429) are waited out. A wrong key or a bad request stops at once.
+- **Models that think first, and what is not a limit (0.43.12).** Many models think before they answer, and their
+  thinking uses the same answer room (*max_tokens*). Only an answer the server cuts, with no thinking in it, counts as
+  an answer limit; a model that thinks first or stops a list early is not limited by it. A model seen thinking gets
+  room for its thinking on every call (plans, notes, parts), and an empty answer that comes with thinking is asked once
+  more with more room. A failure well inside a tested window (a 502 from a busy gateway, an empty answer) is sent again
+  as it is: it never makes the window smaller. Only a size error from the server ("context length", 413), or a 502 at a
+  size the test did not show to be fine, does. Windows kept by 0.43.10–0.43.11 are forgotten once on update, because
+  they could be far too small (down to 768 tokens); each model is tested again when used.
+- **Timeouts (0.43.13).** A 504 or a timeout means the server took too long, not that the request was too big: the
+  call is made quicker (the answer in parts in the chat, a shorter answer for agents, then a smaller prompt for that
+  call only), never sent again unchanged, and the window is kept. In Setup, *Longest answer* says **no cut seen** when
+  the test saw no cut, and **not measured (it thinks first)** when the model thought through all the room it was given.
+- **Defaults (0.43.14).** *Answer long prompts in parts* is **Never** (one reply, continued in steps when it is cut)
+  and *Test new models* is **Only with the button**. With *When needed* or *Always*, each part is asked with the request
+  and the answer so far in the prompt, plus a reminder of what is asked, the parts, and how the last part ended. An
+  empty answer is never sent again unchanged: it is asked again with more room (a model may think without showing it).
+- **The test runs in Setup.** *Test the limits* shows each step live under the button: the model being tested, the
+  step, the time, each finished model's row, and a **Stop** button. The test log stays below the table. Tests started
+  from Setup no longer write their steps in the chat.
+
+For the OpenAI-compatible provider (self-hosted servers), in the extension and the server.
+
+**Files larger than the window, for agents (0.43.11).** An agent does not get notes of a long file: notes lose the
+detail a fix needs. A code file, notebook or pasted code too long for the window is kept whole and replaced in the
+prompt by its **map**, for example:
+
+```
+src/billing.py: 4,816 lines, 604 symbols (lines start–end):
+  4–4169  helper_0 … helper_520 (521 functions like it)
+  4172–4182  class Billing
+    4173–4174  def __init__(self, rate)
+    4176–4178  def compute_tax(self, amount)
+    4180–4182  def invoice(self, amount)
+  4185–4814  helper_521 … helper_599 (79 functions like it)
+Read the exact lines you need with read_file (path "src/billing.py", start_line, line_count); ...
+```
+
+The agent then reads the exact lines (`read_file` with `start_line` and `line_count`; each read is sized to the
+window and ends with `next: start_line=N`), finds names with `search_text`, and follows calls with `call_graph`.
+Names the request mentions always stay in the map. Pasted code is kept as a read-only `@input/pasted.py` (or `.txt`)
+that these tools accept; attached workspace files stay where they are, so the agent can change them.
+
+- **Notebooks**: read as cells (`# %% [cell 12] code`), one header line per cell; the map lists every cell (markdown
+  cells with their first line or heading) and the functions and classes defined in each code cell.
+- **Without the editor** (server, jobs, notebooks): `code_symbols` and `call_graph` work from the text of the files;
+  callers are found by text search, so calls through another name can be missing.
+- **Long sessions**: earlier reads become one-line pointers ("read earlier: … lines 4176–4178 …"); the last two stay
+  whole. The agent reads again what it needs.
+- Prose (reports, notes) is still read in parts. *Long inputs for agents* → **Notes from each part** gives the
+  behaviour of 0.43.10.
+
+**Setup → Context windows per model**:
+
+| Choice | Where the limits come from |
+|---|---|
+| **Learn from the answers** (default) | your list first, then what the model's answers showed |
+| **Off** | nowhere: Max input tokens and Max tokens per call apply to every model, as before 0.43.9 |
+| **Ask the server, and use my list first** | your list, then the server (and what was learned): LiteLLM `/model/info` (`max_input_tokens`, `max_output_tokens`), vLLM `/v1/models` (`max_model_len`), LM Studio, OpenRouter, Ollama `/api/show` (`num_ctx`) |
+| **Only my list** | your list |
+
+**My list**, one rule per line, first match wins: `model=window[/max answer]`, `k` for thousands, `*` for anything:
+
+```
+llama-3-8b=8192/2048
+qwen*=32k/4k
+*-7b=4096
+```
+
+**What happens on each call** of a model with a known window:
+
+1. The prompt gets the window minus the room kept for the answer (a third of the window, or less if Max tokens per
+   call or the model's own limit is lower) and a 5% margin. A longer chat is summarized, then old tool outputs and
+   attachments are trimmed, as with Max input tokens.
+2. The answer asks for the room that is left, within the model's own output limit.
+3. An answer cut by that limit continues in parts and is joined (Max continuations: 4 or 5 is good for small windows).
+   Some servers and proxies say “stop” when they cut. **Continue a cut answer when** decides what counts as cut:
+   *the server says it was cut* (default), *it used all its tokens* (about all its output tokens, or a full window;
+   used on its own for models with a known window), or *it also looks unfinished* (open code block, mid-sentence).
+4. File reads get smaller for small windows (about a quarter of the window).
+5. Big attached files: files attached to earlier messages are removed first; the files of your current message are
+   **shortened to fit** (each keeps its beginning and says where it was cut), and the model reads the rest from the
+   file. For work on a whole long document, `/stereport` reads it part by part with notes, and Code search (RAG)
+   finds the relevant parts.
+
+A model with no known window is never limited. **Check the limits** shows each model in use with its window, its
+longest answer and where it came from. In LiteLLM, set the limits in your config's `model_info` if the server does
+not report them:
+
+```yaml
+model_list:
+  - model_name: llama-3-8b
+    litellm_params: { model: openai/meta-llama/Meta-Llama-3-8B-Instruct, api_base: http://vllm:8000/v1 }
+    model_info: { max_input_tokens: 8192, max_output_tokens: 2048 }
+```
+
+---
+
+## 49. Long jobs: notebooks and repositories, step by step
+
+For work that does not fit in one answer: a whole notebook updated or rewritten, a refactor across many files, a
+conversion of a repository.
+
+```
+/job rewrite this notebook with polars instead of pandas, and add a chart for each section   (notebook attached)
+/job rename the User model to Account everywhere, with its tests                              (no file: the repository)
+/job resume        continue the last job that did not finish
+/job status        list the jobs
+```
+
+You can also just ask in the chat; for a long rewrite, the assistant starts the job itself.
+
+**How it works**
+
+1. **Plan** (lead model): for a notebook, the cells to edit, insert or delete; for a repository, the files to modify,
+   create or delete. Big files are split into parts (Setup → Long jobs → lines per part).
+2. **Steps** (worker model), in order: each step sees the goal, the plan with what is done, the **journal** (one
+   note from each finished step: what it did and the names it introduced), and only its own cell, file or part with
+   its neighbours. That is why the job is not limited by the model's context or output.
+3. **Checks and retries**: Python syntax, valid JSON, nothing empty, nothing shortened with “…” or “rest unchanged”.
+   An invalid result is tried again with the error (Setup → tries per step); a cut output continues in parts.
+4. **Review** (lead model): it reads what each step did and can send steps back with a fix.
+5. **Result**: the changes are shown as diffs to approve (⚡ Auto applies them), with a table of every step.
+
+**State and resume.** The job is saved after every step in `.swarmlab/jobs/<id>.json` (the plan, each step's
+status and result, the journal). If it stops (Stop, an error, a limit, VS Code closing), `/job resume` continues
+from the next step; finished steps are not redone, failed ones are tried again. A failed step leaves its cell, file
+or part as it was.
+
+**What each step sees.** The goal, the plan with what is done, the journal, and its own cell, file or part. In a
+notebook, also: the names defined in **all** earlier cells (from their new versions, with the cell that defines each),
+a one-line outline of every earlier cell, the last two cells in full, and what the cell showed last time. Outputs are
+never cells: they are never written; raw cells are left alone.
+
+**The plan first.** The plan is checked (duplicates and contradictions fixed, then the lead model looks for missing,
+needless or misplaced steps; Setup → Check the plan), then shown in the Run tab: untick the steps you do not want and
+press **Start** (Setup → Show the plan before starting). With ⚡ Auto: everything, it starts at once, and the result
+is applied without asking. Neighbouring cell edits are done together (**Notebook: cells per step**, 3 by default).
+
+**Run the code** (Setup → Long jobs; off by default). *After each step*, the notebook up to that step is run; *at
+the end*, the whole notebook. It runs with Python in the notebook's folder (relative data files work), with a time
+limit; charts do not open windows. An error is traced to its cell, and the step that made that cell is done again
+with the traceback. It asks once per job; ⚡ Auto answers it. Running the code runs your code: data it writes or
+services it calls are real.
+
+**Live preview.** While a step writes, its text appears in the Job view; click a finished step to see its diff.
+
+**Understand the code first** (Setup → Long jobs; *auto*: repository jobs of more than 3 files). Before planning,
+the worker model writes a short card for each file (what it does, what it gives, what it uses, what to know before
+changing it), and Swarm Lab maps which file imports which (Python, JavaScript, TypeScript). The plan is made from
+this map; each step gets the cards of the files its file uses and of the files that use it. Cards are kept between
+jobs, by the file's content: the next job on the same code only describes the files that changed.
+
+**Files the job may read** (one pattern per line, for example `src/**`, `tests/**`, `*.md`; empty: the whole
+workspace). The file list, the code base map and agent steps stay inside them, and the job cannot change, create or
+delete a file outside them. Include what your code imports, its configuration and its tests.
+
+**Only what changes.** The planner first sees where the goal's names and words are (each matching cell or file, with
+the line), and plans only the cells or files the goal needs. A step that changes a cell, file or part of 30 lines or more
+answers with **find/replace blocks** (only the changed lines), or **NO CHANGE**; shorter ones are written whole (Setup →
+Long jobs → *How steps change cells and files*: Auto, Patch, Rewrite; also in the Job view). In big files, only the
+parts that contain what the plan says the change touches become steps; the other lines stay as they are.
+
+**Context per step.** Plain steps never call tools or explore: each is one call with exactly its context, which you
+choose: *Lean* (the plan around the step, a few notes, the names defined before, one related cell or three related
+files), *Balanced* (the default) or *Full* (the whole plan, more notes, a long outline, more related cells and
+files). Each step's estimated tokens show in the Job view.
+
+**The job's settings.** The Job view shows the settings this job runs with (cells per step, run the code, kernel or
+script, review rounds, tries, agent steps, tests, check command, models, review before applying). They are saved with
+the job, so a resumed job runs the same way, and can be changed while the plan waits for **Start**.
+
+**A live Jupyter kernel.** With Run the code on and **Use a live Jupyter kernel** (Setup → Long jobs, on), the
+notebook runs in a real kernel that stays loaded: after a step, only the new or changed cells run, and a change to an
+earlier cell restarts the kernel and replays. It needs `jupyter_client` and `ipykernel` in your Python
+(`pip install jupyter_client ipykernel`); without them, the notebook is run as a script.
+
+**Review before applying.** When the steps are done, the Job view lists them, each with its diff: **Undo** leaves a
+step out (its cell or file stays as it was), **Redo…** does it again with your instruction; then **Apply** or
+**Discard** (Setup → Review the result before applying; ⚡ Auto: everything applies at once).
+
+**Tests.** With **Add test steps to the plan**, the plan ends with an assert cell (notebooks) or test files
+(repositories). For repositories, a **check command** (for example `pytest -q`) runs at the end; a failure goes to
+the review, which sends the steps to fix back, up to 2 rounds. In repositories, each step also waits for the files
+it needs first.
+
+**Follow it in the Run tab.** The **Job** view shows the goal, a progress bar, what happens now, steps done, calls,
+cost and time, **Stop** and **Resume**, and every step with its status (✓ done, → now, · to do, ✕ failed), its
+tries, and its note or error.
+
+**Provider trouble.** A job does not fail because the provider is busy. Rate limits, overload, server errors and
+network drops are waited through, longer each time (30 s, 1, 2, 5 min) or as long as the server asks; these waits do
+not count as tries, and the Job view shows them. After **Wait for a busy provider up to** (Setup → Long jobs, 10 min
+by default), the job **pauses**, saved; `/job resume` or **Resume** continues from the next step. An error that
+waiting cannot fix (a wrong key, a model that does not exist) stops the job with its message.
+
+**Context too long.** If the provider says a step is too long, the step is made smaller (a shorter journal and less
+of the neighbours), up to 3 times, without counting as a try; a whole file that is still too long is split in parts.
+
+**Agent steps** (optional). With **Agent steps** on, each step is an agent turn that can read other files, search the
+code and run a check command (for example the tests, or the code) before it answers. It never changes files itself:
+its answer is the step's result. It has its own limits (tool turns, tokens, time); if it gives nothing, the step is
+done with one plain call.
+
+**Order and speed.** Notebook cells and the parts of one file are always done in order. With **steps at once**
+above 1, steps on different files run at the same time (only for independent files).
+
+---
+
+## 50. What the assistant can access
+
+**🔐 Access**, in the chat's toolbar, shows what the assistant can do right now: the workspace, what it can read and
+change (from Configure → Agents and your project policy), whether commands are allowed (and which run without asking),
+web research, the browser, data folders, MCP tools, Work on its own, and the files attached to your message.
+
+---
+
+## 51. Isolation: where commands run
+
+**Setup → Isolation** chooses where the agents' commands, tests and code run, separately for the **chat** and for
+**long jobs and runs**:
+
+| Choice | Where | Deleted |
+|---|---|---|
+| **machine** | Your folder, your PATH, HOME and installed packages, as before 0.43.6 (the environment VS Code started with) | Nothing to delete |
+| **existing** | Your folder, inside the virtual or conda environment you already use, as if activated: **Your environment** (`.venv`, `~/envs/proj`, or its Python), else VS Code's selected Python interpreter (a venv or conda one), else `.venv`, `venv`, `env`, `.conda` | Never: nothing is created or deleted; what the agent installs stays in your environment |
+| **venv** (default; recommended for the chat) | Your folder on this machine, with its own Python virtual environment first on PATH (what the agent installs lands there, not in your Python), its own temporary folder and caches. Your installed packages stay visible (*see the machine's Python packages*, on) | With the conversation (chat), at the end (job, run) |
+| **docker** (recommended for jobs and runs when Docker is installed) | A container (`python:3.12` or `node:22` from the project, or your image), your folder mounted at `/workspace`; nothing else of the machine is shared. The project's dependencies are installed first | Same |
+
+- **Chat**: one environment per conversation, kept while you talk (packages installed in one message are there in the
+  next). Deleting the conversation deletes it; **New chat** stops its container and keeps its folder until the
+  conversation is deleted.
+- **/job and runs**: one environment per job or run, deleted when it ends (also when it stops, pauses or is
+  discarded; `/job resume` makes a new one). Isolated notebook checks run as a script in the environment (the live
+  Jupyter kernel is for *machine*).
+- **VS Code closes**: containers stop; folders left behind are removed at the next start.
+- **Swarm Lab: Delete isolated environments** (command) deletes them all now.
+- The approval card of each command says where it will run. If the environment cannot be prepared (no Python, no
+  Docker, a failed install), nothing runs: choose another isolation or fix the cause.
+- What isolation is not: a venv runs with your user's permissions in your folder; Docker shares your folder (the agent
+  can still change your files there, through the usual approvals). Keep Git safety on.
+
+Server jobs: `"isolation"` in the job, or the server configuration's `isolation` (SERVER.md, section 4.5).
+
+## 52. The Lab: GPU or CPU, apps, training runs and their results
+
+Activity → **Lab** (or *Swarm Lab: Open Lab*).
+
+**Compute.** The top of the tab says what runs use, for example *GPU · NVIDIA GeForce RTX 4090 (24 GB) · CUDA 12.4*, or
+*CPU · … (16 cores, 64 GB RAM)*. It is detected once (nvidia-smi, rocm-smi, the Apple chip, Python, PyTorch, package
+managers) and kept for every project; press *Detect again* after installing a driver or PyTorch. *Everything detected*
+lists the facts, and *Python to use* sets the interpreter (a venv's python works).
+
+Choose **Auto**, **GPU** or **CPU**. Every command an agent runs then gets:
+
+| Variable | Value |
+|---|---|
+| `SWARMLAB_DEVICE` | `cuda`, `mps` or `cpu` (AMD ROCm builds of PyTorch use `cuda`) |
+| `MPLBACKEND` | `Agg` (charts are saved without a window) |
+| `PYTHONUNBUFFERED` | `1` (logs arrive line by line) |
+| `CUDA_VISIBLE_DEVICES` | empty, only when you chose CPU |
+
+In code: `device = os.environ.get("SWARMLAB_DEVICE", "cpu")`. When there is a GPU but PyTorch cannot use it (the
+CPU-only build), the Lab says so and agents propose the matching build, asking first.
+
+**Processes.** Type a command (`streamlit run app.py`, `python train.py`), an optional name and address, and *Start*.
+It runs in the background with no time limit; the card shows its last lines, the address it printed, 📷 for a
+screenshot (needs the browser of section 47), *Log* for the whole log (`.swarmlab/lab/processes/`) and *Stop*, which
+stops its child processes too. Agents start processes with `start_process`; each one is approved like a command (you
+can change it first), and Work on its own applies as usual.
+
+**Results.** Agents put finished work on the board with `lab_record`: a metrics file (`metrics.jsonl`, one JSON object
+per line, or a CSV with a header) becomes one small chart per series with its last, smallest and largest value,
+redrawn every few seconds while a process runs; final numbers become tiles; pictures show as thumbnails. Removing a
+card leaves the files. The board is `.swarmlab/lab/records.json`.
+
+**Search the project, with filters.** The code index (section 10), searched with a folder or glob, extensions, a kind
+(code, docs, data, config), how recently the file changed, and what to leave out.
+
+### Tools agents get
+
+| Tool | What it does | Needs |
+|---|---|---|
+| `system_info` | The facts above and the device to use | Lab on |
+| `install_packages` | pip (the detected Python), uv, conda, npm, brew, winget, choco or apt; names only, no shell characters | Allow commands |
+| `start_process` | A long command in the background; waits for its address; screenshot when ready | Allow commands |
+| `process` | status, logs, wait (up to 600 s), stop, screenshot, list | Allow commands |
+| `lab_record` | A result on the board | Lab on |
+
+Leads never get the tools that run things. Settings: *swarmLab.lab.enabled*, *lab.device*, *lab.python*,
+*lab.installTimeoutSec* (default 1200 s).
+
+## 53. Metadata filters on code search
+
+*swarmLab.rag.filters* (`agent`, the default, or `off`). With `agent`, `search_code` takes optional filters:
+
+| Filter | Example |
+|---|---|
+| `path` | `src`, `docs/**/*.md` (a folder means everything under it) |
+| `exclude` | `tests/**, *.min.js` |
+| `ext` | `ts,tsx` |
+| `kind` | `code`, `docs`, `data`, `config` |
+| `modified_after`, `modified_before` | `2026-10-01`, or `7d`, `12h`, `2w`, `3m` |
+
+Files are filtered before ranking, so a filtered search still returns its best matches. Is it recommended? As an
+option, yes; as a default, no. A filter helps when the question names where the answer is ("in the docs", "tests only",
+"changed this week") and hides the answer when it is wrong. So agents are told to use filters only then, and a filtered
+search that finds nothing says to search again without the filter.
+
+## 54. Web pages: source type and dates
+
+Each page an agent reads with `fetch_url` starts with a line such as:
+
+> Source record: 👥 Anyone can post (reddit.com) · published: 2026-10-20 · updated: not found on the page.
+
+The type comes from the address (official or docs, government, news, anyone can post, research, reference, code,
+other); the dates come only from the page itself (meta tags, JSON-LD, `<time>`), never from a guess. A type says what to
+check first, not whether a page is true. The skill *ai-search-citation-record* turns this into a full record:
+the same question asked twice, cited pages compared, concentration on one site or on posting sites, and what a person
+checked.
+
+## 55. Pasted text, the message editor and Access
+
+**Pasted text becomes a file** in `.swarmlab/uploads`, named by its type (`pasted-142501.csv`, `.json`, `.py`,
+`.log`…). *swarmLab.chat.pasteAsFile*: `always` (two lines or more, or longer than *chat.pasteAsFileMinChars*, 200),
+`long` (only long text) or `never`. The chip shows 📋 with the type and the lines; ⤶ puts the text back in the message.
+Ctrl+Shift+V (Cmd+Shift+V) always pastes as text.
+
+**Editing a sent message** (✎ on your message) opens a full-size editor: the conversation before it on the left
+(*Context* hides it), the message on the right, its files below. Remove a file with ✕; add one with *＋ Image or file*,
+*@ Workspace file*, or by pasting or dropping it. *Resend* (Ctrl+Enter) replaces the messages after it.
+
+**🔐 Access** (Chat) now changes what it shows: file changes, commands and the allow-list, web research, browser, Lab
+tools, device, search filters, work on its own, pasted text, and the files attached to the next message.
+
+## 56. The message box (0.45)
+
+```
+[🌐 Web on] [🖥 GPU · CUDA] [🔐 You approve changes]
+Ask about your code, describe a change, or type / for commands and @ for files
+ ＋   🛠 Agent ▾   Default (Setup) ▾              ⚡ Auto   [ Send ]
+```
+
+| Control | What it does |
+|---|---|
+| ＋ | Upload a file or picture, pick a workspace file, screenshot a page, paste the next one as text, anything from the Make tab, open the Lab or Access |
+| Mode ▾ | 💬 Chat (answers only, no tools) · 🛠 Agent (reads, edits, runs; starts a team when needed) · 👤 Single · 🌳 Tree · 🐝 Swarm · 🔀 Graph |
+| Model ▾ | Which model answers (as before) |
+| ⚡ Auto | Work on its own: off, edits, everything |
+| Send / Start / ■ Stop | Sends; *Start* in a run mode; *■ Stop* while the assistant works and the box is empty |
+| Chips | What the assistant may do now; each opens 🔐 Access |
+
+A run mode adds its command to your next message: with 🌳 Tree, "fix the date bug" is sent as `/tree fix the date bug`.
+Type your own command (`/review working`) and it is sent as typed. Chat and Agent are the same setting as
+🔌 Sending → Mode.
+
+Type **/** at the start of the box for the list of commands. ↑ and ↓ choose, Enter or Tab fills it in, Escape closes it.
+**@** still attaches a file or sends the message to one of your agents. Enter sends, Shift+Enter adds a line.
+
+## 57. Refine a harness
+
+Configure → **Harness**. Fill the harness (or load one), write the **Task** to refine it on, then open **Refine this
+harness**.
+
+| Option | Choices |
+|---|---|
+| Edits to try | 1, 2 or 3 of each kind (general, and for this kind of task) |
+| How | **Wide:** try every edit, then combine once (2 + 2k runs) · **Deep:** rounds, each starting from the last kept harness (1 + 3k runs) |
+| Probe runs | **Read-only** (no edits, no commands: the default) · **As the harness allows** (each change still asks you) |
+| A good answer contains / never says | Optional words, comma-separated: they become checks |
+
+Press **Refine…** and approve the number of runs. Each run appears in the table as it ends: what changed, whether it
+finished (and its own check and tests), tool calls, tokens, errors and loops, checks, and a score that orders the
+table (checks first, then finishing, then fewer errors, loops and tokens). Open *Answer* to read each one. The composer
+reads the runs themselves, not only the score.
+
+At the end a card shows the composed harness: its instructions, guardrails, tool guidance, skills and settings, its
+score against the harness as it was, and the lessons kept. **Save as name-r2** stores it as a new version (the
+original stays); **Load into the form** lets you change it first. When the composed harness did not beat the base,
+the card says keeping the current one is safer.
+
+What a refinement may change: the harness instructions, these settings (steps per agent, agents, token budget,
+tokens per call, code search results, continuations, answer length and style, one tool call at a time, automatic code
+search, a final answer at the step limit) and the mode between single, tree and swarm. It never changes what agents may
+read, change or run, the provider or the model, and never switches a workflow (graph) harness to another mode.
+
+**Lessons** (`.swarmlab/harness-lessons.md`): one line each, with the date, the harness and the task; the newest 80
+are kept and read by the next refinement. *Lessons* shows them; *Open the file* edits them.
+
+**Instructions for every agent** (Harness tab): Instructions, Guardrails, Tool guidance and Skills to load first.
+They are added after each agent's own prompt in every run with this harness. Server jobs read them from the job's
+`harness`, or from `"instructions": { "system", "guardrails", "toolGuidance", "skills" }` in the job (the job's win).
+
+## 58. The panel: sidebar, Details, groups and views
+
+- **☰** (top left of Chat): your conversations as a sidebar, with search, *＋ New chat* and export. Click outside or
+  press Escape to close it.
+- **ⓘ Details** (top right): Context, Sending, Memory, Notes (when memory is off), Steps, Data, Access and Costs as tabs
+  of one panel; ← and → move between them, ✕ closes. Today's cost is shown beside the button; click it for Costs.
+- **Groups:** Chat (Chat, Make) · Activity (Tasks, Runs, Lab) · Configure (Agents, Workflow, Prompts, Harness,
+  Project) · Insights (Codebase Graph, Code map, Bench, Check) · Settings (Setup, Tools, Server). The Activity badge
+  counts what is running: a run, tasks and Lab processes.
+- **Views** (*swarmLab.ui.view*, or Actions → View): *Simple* shows Chat, Activity and Settings; *Coding agent* adds
+  Configure; *Everything* shows all groups. The first time the panel opens it asks which one you want (*Decide
+  later* keeps Everything). Views only hide tabs: commands, settings and agents work the same in every view.
+
+## 59. Language
+
+*swarmLab.language*: `auto` (French when VS Code's display language is French, else English), `en` or `fr`. The panel is
+drawn again when it changes. Settings and commands follow VS Code's display language (**Configure Display Language**),
+not this setting. Technical terms stay in English. *swarmLab.language.answers* (on): with the panel in French, agents
+write to you in French, keeping code, commands, file, tool and setting names and technical terms in English. Messages
+written by the extension itself (pop-ups, some notes and progress lines) and this manual are in English. The French
+README is `README.fr.md`.
+
+## 60. Certificates (trust store)
+
+| Setting | What it does |
+|---|---|
+| `swarmLab.tls.caFiles` | CA files to trust (PEM, or DER `.cer`): absolute, relative to the workspace, `~/…` or `${workspaceFolder}/…` |
+| `swarmLab.tls.systemCertificates` | Also trust the operating system's store: Windows (Root and CA, machine and user), macOS (System and System Roots keychains), Linux (the first of `/etc/ssl/certs/ca-certificates.crt`, `/etc/pki/tls/certs/ca-bundle.crt`, …) |
+| `swarmLab.tls.forCommands` (on) | The same authorities for commands agents run and the local server, as one bundle in the extension's storage (`tls/ca-bundle.pem`) given as `NODE_EXTRA_CA_CERTS`, `SSL_CERT_FILE`, `REQUESTS_CA_BUNDLE`, `CURL_CA_BUNDLE`, `PIP_CERT`, `GIT_SSL_CAINFO`, `AWS_CA_BUNDLE`, `npm_config_cafile`, `DENO_CERT`. The local server uses it after a restart |
+| `swarmLab.tls.allowInvalid` (off) | **Unsafe.** No certificate check for Swarm Lab's requests (and, with *forCommands*, `NODE_TLS_REJECT_UNAUTHORIZED=0`, `GIT_SSL_NO_VERIFY=1`, `npm_config_strict_ssl=false` for commands) |
+
+Certificates are added to Node's own authorities. Changes apply at once to model calls, `web_search` and `fetch_url`,
+the decision model and embeddings, direct or through `swarmLab.proxy`. **Setup → Certificates → Check certificates**
+lists what is trusted, each file that gave no certificate and why, and tries one HTTPS request to the provider's
+address. To get your company's CA: ask IT, or in a browser open any HTTPS site, view the certificate, select the top
+(root) certificate of the chain and export it (Base-64 / PEM).
+
+## 61. Review by conditions and inputs
+
+**Conditions.** `edit_file` and `write_file` take `applies_when`, `not_when` and `edge_inputs` (`[{"input": "shipping_fee(5000)", "expected": "0"}]`, or lines `f(1) → 2`). The edit card shows *Applies when*, *Does not apply when* and *Checked with* under the reason. A change to logic (conditions, comparisons, branches, returns) in a code file that states none shows *⚠ Conditions not stated*.
+
+**Check with an input…** (Python `.py`, JavaScript `.js/.mjs/.cjs`, TypeScript `.ts/.mts/.cts` with the project's `typescript` package): give an expression with the file's names and the result the specification expects (a value in the file's language: `0`, `"ok"`, `[1, 2]`). The proposed version, then the current one, are written next to the original as hidden temporary files (`.<name>.swarmlab-check-…`, deleted at once), loaded, and the expression is evaluated; equal values (deep equality in JavaScript) count as expected. 15 s at most. Python is *swarmLab.lab.python*, else `python3`/`python`. The first check of a window asks before running code. **Run its N checks** runs the agent's `edge_inputs`. Your checks, and your think-first note, are added to the message the agent gets after Apply or Reject.
+
+**Think first** (`swarmLab.review.thinkFirst`): `off`, `risky` (logic in a code file that touches money, access, limits, dates or counts, or three changed lines or more) or `always`. Show the explanation is enabled after 8 characters; Skip shows it without a note.
+
+**/practice [folder or file]** sends a read-only request (in the panel's language): find one change made with an AI that a later fix, pull request or test shows to be a bug; show the request or specification and the code before the fix; wait for your answer; then show the fix and its evidence, marking what is not confirmed.
+
+**Reviewer check** asks, before the answer, why the line is wrong and the input you would test, and after it, what you noticed only then. **My AI reliance report** adds: edits checked with an input, edits with a note before the explanation, checks explained first and how many of those were found, notes noticed only after the answer, and a hint when the median time to answer in the last week is 1.5 times that of the first.
+
+## 62. Pictures inside attached files
+
+Attached files (**＋ Files**, `@`, drag and drop) and files read with `read_data` give the model their pictures as well
+as their text, when the model can see:
+
+| File | Pictures taken |
+|---|---|
+| Word (.docx), OpenDocument | Every picture, in reading order (pictures in headers and footers after the others) |
+| PowerPoint (.pptx) | Each slide's pictures, labelled with the slide; with `from` / `count`, only those slides |
+| Excel (.xlsx) | Pictures placed on the sheets (charts drawn by Excel itself are data, not pictures) |
+| PDF | The pictures drawn on the pages read: JPEG as it is; grey, RGB, CMYK, palette and 1–16-bit pictures, and black-and-white fax scans (CCITT Group 3 and 4), as PNG. JPEG 2000 and JBIG2 are counted, not shown |
+| Scanned PDF | No text layer: the page pictures go instead, so a model that sees can read them |
+
+Pictures under 48 pixels on a side (bullets, icons) are left out; pictures over about 4.5 MB, and EMF, WMF, TIFF, BMP
+and SVG pictures, are counted with a note. The text tells the model how many pictures there are, which ones are
+attached and in what order, and how to read the others (`read_data` with `from` / `count`).
+
+**Which model sees: automatic.** In order: your list (`swarmLab.data.visionModels`: `my-model` sees, `!my-model` does
+not, `*` is a wildcard, the last match wins), then what the provider answered before, then the model's name (Claude,
+GPT-4o, 4.1 and 5, o1, o3, Gemini, Gemma 3, Llava, Llama 3.2 Vision and Llama 4, Qwen-VL, Pixtral, Mistral Small 3.1,
+MiniCPM-V…; GPT-3.5, o3-mini, DeepSeek R1 and V3, Codestral, Llama 3.1, Mixtral and embedding models do not). A model of
+unknown sight is sent the pictures once: if the provider refuses them, the same request goes again without them, and
+the answer is remembered (**Swarm Lab: Forget which models take pictures** clears it). A model that does not see gets a
+short note in place of each picture. The same applies to agents, runs and the server (`provider.visionModels`; the local
+server gets your list).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `swarmLab.data.images` | `true` | Pictures to the models that can see them; off: never |
+| `swarmLab.data.visionModels` | `[]` | Models that see (`name`) or do not (`!name`) |
+| `swarmLab.data.maxImages` | `8` | Most pictures sent with one message, from all its files together (0–20) |
+
+In **Setup → Model provider**, under the models. **Setup → Certificates (trust store)** now comes right after it.
+
+## 63. Reminders and the Today page
+
+**Add one** in the chat: `/remind <when> <what>`, or **Swarm Lab: Add a reminder** (the box shows the time it
+understood as you type), or the box at the top of the Today page.
+
+| You type | Due |
+|---|---|
+| `in 20 min check the build`, `in 1h30 leave`, `in 2 hours call back` | That long from now |
+| `tomorrow 9:00 call Sara`, `tonight call mom`, `today 17:30 …` | That day (a day without a time: 9:00) |
+| `friday 2pm send the report`, `next friday …`, `at 9:30 …` | The next such day or time (a time already past: tomorrow) |
+| `2026-11-03 14:00 dentist` | That date |
+| `every weekday 8:30 stand-up`, `every day 18:00 …`, `every monday …`, `every month 10:00 …` | Repeats: **Done** moves it to its next time |
+| `demain 9h appeler Sara`, `lundi 14h30 …`, `dans 20 minutes …`, `tous les jours 18h …`, `en semaine 8h30 …`, `ce soir …` | The same, in French |
+
+Times are this computer's. **When it is due**, VS Code shows a notice: **Done** (for a repeating one: **Done, next
+time**), **+10 min**, **Tomorrow 9:00**, **Open Today**. Each due time is announced once, also with several windows open;
+reminders more than 6 hours overdue (VS Code was closed) are listed, not announced one by one. The 🔔 in the status bar
+shows how many are due today (yellow when one is overdue) and, with ☑, the agents' tasks waiting for you.
+
+`/reminders` lists them with numbers; `/reminders done 2` and `/reminders delete 2` act on one.
+
+**The Today page**: start the local server (**Server** tab → **Start local server**), then **Swarm Lab: Open Today**
+or a click on the 🔔 opens **http://127.0.0.1:8787/today** with your key (passed in the address's `#` part, which never
+reaches the server, and removed at once). Without a server, the same click shows the list in VS Code.
+
+- **Reminders**: due now, later today, the next 7 days, later, done today; **Done**, **+10 min**, **+1 h**,
+  **Tomorrow**, **✕**.
+- **Agents' tasks** (the Tasks tab's list): waiting for you (ready for review, waiting for your go-ahead), working,
+  problems (failed, stopped), done today. Titles and status only; the threads stay in VS Code.
+- Refreshed every 30 seconds and when you come back to it. **🔔 Turn on alerts** gives browser notifications; browsers
+  allow them on `127.0.0.1` and `localhost`. From a phone on your network the page works, highlights what is due, but
+  cannot notify.
+
+Everything is in `.swarmlab/reminders/reminders.json` in the project folder (done reminders are kept 30 days). Nothing is
+sent to a model or outside this computer. The API, with a key that has `read` (to view) or `submit` (to change):
+`GET /v1/today[?repo=]`, `POST /v1/reminders` (`{"text": "tomorrow 9:00 call Sara"}`, or `text`, `due`, `repeat`),
+`POST /v1/reminders/<id>/done`, `/undo`, `/snooze` (`{"minutes": 10}` or `{"until": "…"}`), `DELETE /v1/reminders/<id>`.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `swarmLab.reminders.notify` | `true` | A notice in VS Code when a reminder is due |
+| `swarmLab.reminders.statusBar` | `true` | The 🔔 in the status bar |
+
+## 64. The Atlas of your documents
+
+The Atlas reads a folder of documents and finds who and what they are about: organizations, people, projects,
+contracts, meetings… with their facts, the links between them, a timeline, and the places where sources disagree.
+Every item keeps where it was read (file and page, slide, sheet or line). It is **off by default**: **Setup → Atlas**,
+or `swarmLab.atlas.enabled`.
+
+**Build it**: **Swarm Lab: Build Atlas**, `/atlas build`, or **Build now** on the Atlas page. Only files that changed
+are read again; with **Update when documents change** it updates itself 20 seconds after a save (rules only).
+
+| What it reads | What it finds (rules, free) |
+|---|---|
+| Word, PDF, Excel, PowerPoint, OpenDocument, e-mails (`.eml`), Markdown, text, CSV | Companies (by their suffix: Inc, Ltd, SA, GmbH, Group, Industries…, and by e-mail domains), people (e-mail headers, titles, “Name, Role”, attendee lists), projects (“Project X”), contracts and meetings (by file name), tickets (`OPS-142`), Obsidian `[[links]]`, `#tags` and front matter |
+| Every sentence | Amounts (`240 k€`, `$1.2M`), dates (`1 Jan 2027`, `1er janvier 2027`, `Q3 2026`), payment terms (`30 days`, `net 45`), roles, e-mails, phones, links; each fact goes to the names in its sentence, or to the contract or meeting the file is |
+| Across files | Every later mention of a known name (“ACME” after “ACME Industries SA”), merged names, “mentioned together” links, a timeline, and **conflicts**: one entity (or its contract), one key, different values in different places |
+
+**The model pass** (optional, `swarmLab.atlas.model`: `off`, `ask`, `on`): passages of about 1,500 characters go to
+your worker model, which returns entities, relations (“Lina Martin owns Project Orion”) and facts, each with a quote.
+**What its quote does not show in the text is dropped**, and so are names that are not in the passage. Answers are
+cached per passage and model; at most `swarmLab.atlas.modelChunks` new passages per build (the next build goes on).
+
+**Use it**
+- **Agents** (chat, runs, server jobs) get `atlas_search` (a question → the entities named, their facts, conflicts,
+  links, timeline and the sentences, with sources), `atlas_entity`, `atlas_related` (optionally one type) and
+  `atlas_timeline` (optionally between dates). They are told to read the file before relying on a detail.
+- **The chat** (0.48.2): `/atlas` shows the Atlas as a card: counts per type (tap to filter), conflicts, a mini-graph
+  (hover, drag, click), the most mentioned entities and a search box (type, arrows, Enter). `/atlas <name>` opens an
+  entity card: key facts as tiles, conflicts, and tabs **Facts**, **Links**, **Timeline**, **Mentions**, **Graph**; each
+  source opens the file at its line, each link or node moves to that entity inside the card (**Back**, or Backspace).
+  **Ask about it** asks the assistant; ⤢ opens the Atlas page; ⧉ copies the Markdown note. `/atlas <question>` is
+  answered by the assistant from the Atlas. Answers that name entities of the Atlas get **chips** under them: a tap
+  opens the card in place. `/atlas build`, `/atlas open`, and `/atlas text <name>` for the plain-text version.
+- **The Atlas page** of the local server, **http://127.0.0.1:8787/atlas** (**Swarm Lab: Open Atlas**): overview (counts
+  per type, conflicts, latest dates), entity pages (facts with sources, conflicts, links with their evidence, timeline,
+  mentions, files, its Markdown note), a graph you can drag and click, a table per type (facts as columns: contracts
+  with value, renewal and terms), and the timeline. It loads nothing from the network. Without a server, **Open
+  Atlas** lists the entities in VS Code and shows one as a note.
+- **Obsidian**: **Swarm Lab: Export Atlas as notes** writes one Markdown note per entity in `Atlas/`
+  (`swarmLab.atlas.notesFolder`): front matter, facts with sources, `[[links]]`, a warning callout for conflicts. Open
+  the folder as a vault. Notes you wrote there yourself are never replaced. Your own notes with `type:` and `aliases:`
+  in their front matter are read as entities too.
+
+**Your control** (0.48.3, all optional): **⚙ Manage**, opened by *Setup → Atlas → ⚙ My entities and colours*, the
+command **Swarm Lab: Atlas: my entities, types and colours**, or ⚙ in the chat's Atlas card (`/atlas`). Since 0.49.1 it
+works before the Atlas is on or built, so you can set up types, colours and names first. The same list as a file:
+**{ } As a file**, or **Swarm Lab: Atlas: my entities as a file (JSON)** (a new file is empty).
+
+**Many names at once** (0.49.1): ⚙ Manage → My entities → **📋 Paste a list, cells from Excel, or a CSV**. One name per
+line, or columns *name*, *type*, *aliases* (several with `|`) and *match case*, with or without a header row (English or
+French), separated by tabs (cells copied from Excel), `;` or `,`. A type is found by its id, its name or another word
+(*organisation*, *société*, *personne*, *produit*…); one that does not exist is created (untick **Create the types it
+names** to give those rows the type you choose instead). Before anything is added you see how many names, which are
+already in your list (they are updated and keep their aliases), the new types, the skipped lines and why, and the first
+rows; **Add N** adds them. **From a file…** reads a CSV, TSV or text file. For an Excel workbook, copy the cells (with
+the header row) and paste them, or save it as CSV.
+
+**Your own question** (0.49.1): on an entity card, **Ask about …** asks the usual question (key facts, open issues, dates
+coming up, where the sources disagree); **Or ask your own question about …** sends yours, about that entity, with the
+Atlas; the six ideas under it fill the box; **✎ Edit the question** puts the usual question in the message box so you
+can change it first.
+
+| What | Where | What it does |
+|---|---|---|
+| Types and colours | ⚙ Manage, or `types` in `.swarmlab/atlas/entities.json` | Your types (`{"id": "supplier", "label": "Supplier", "color": "#e0565b"}`); a built-in type's id changes only its name or colour. Used by every dot, chip, avatar and node, in the chat and on the Atlas page |
+| Your entities | ⚙ Manage, 📌 on a card, or `entities` | Exact names and aliases, found whatever their length or case (or with case, `caseSensitive`); they keep your type |
+| Patterns | ⚙ Manage (tested while you type), or `patterns` | Regular expressions for codes; each match is an entity of that type; a group `( )` keeps only that part |
+| Only my entities | ⚙ Manage, or `options.onlyListed` | No automatic guesses: only your list and patterns |
+| Corrections | ✎ on any entity card, or `.swarmlab/atlas/corrections.json` | `rename`, `retype`, `merge`, `removeAlias`, `reject`; by name, kept on every rebuild; **Undo** in ⚙ Manage |
+
+**Exact search**: the **=** button next to the search box, or a name in “quotes”, finds only entities whose name or an
+alias is exactly that. A change to your list or corrections links the Atlas again in about a second without reading
+any file; editing the two files by hand gives completion and checks (their JSON schemas), and saving them applies them.
+
+The API, with a key that has `read` (to view) or `submit` (to build): `GET /v1/atlas`, `/v1/atlas/search?q=&type=`,
+`/v1/atlas/entity/<id>`, `/v1/atlas/note/<id>`, `/v1/atlas/graph?center=&depth=`, `/v1/atlas/table?type=`,
+`/v1/atlas/timeline?entity=`, `POST /v1/atlas/build`.
+
+**Limits.** Rules find names written the usual way; a model finds more but can be wrong, so every item points to its
+source. People are not merged by first name alone. Dates like `03/04/2026` are read day first. Everything stays in
+`.swarmlab/atlas/` in the folder; nothing is sent anywhere unless you turn the model pass on.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `swarmLab.atlas.enabled` | `false` | The Atlas on |
+| `swarmLab.atlas.preset` | `business` | `business`, `research` or `general` |
+| `swarmLab.atlas.model` | `ask` | The model pass: `off`, `ask`, `on` |
+| `swarmLab.atlas.modelChunks` | `200` | Most new passages per build for the model |
+| `swarmLab.atlas.folders` | `[]` | Folders to read (empty: all) |
+| `swarmLab.atlas.autoUpdate` | `true` | Update after documents change |
+| `swarmLab.atlas.includeCode` | `false` | Also read code files |
+| `swarmLab.atlas.notesFolder` | `Atlas` | Where notes are exported |
+
+## 65. 🩺 Check: why an answer is wrong
+
+`/check` in the chat (or **Swarm Lab: Check**, or *Setup → Code search → 🩺 Check*) opens a card with three tools.
+They only read and report; nothing is changed unless you press a fix.
+
+**Trace a question** (`/trace [question]`, or **Is this answer wrong?** in the trace under any answer, below). Give the question and a few
+words the right answer contains, exactly as the document writes them; optionally the file. Each stage is checked in
+order, and the verdict names the first one that loses the words:
+
+| Stage | Checked | Typical finding |
+|---|---|---|
+| Read from the file | The file as Swarm Lab's readers see it (Word, PDF, Excel… included) | “00123 lost its leading zeros: it appears as 123.0”; a scanned PDF |
+| In the search index | The chunks of the code index | Word, PDF and Excel are not in the code index (read when attached, with `read_data`, or by the Atlas); left out by Include / Exclude |
+| Found by search | The rank of the right chunk for this question | “Ranked #7: agents read 6, the chat adds 4”; not in the first 50 (other words: add an embedding model) |
+| In the Atlas | Facts and sentences of the Atlas | Not attached to any entity (add the name in ⚙ Manage) |
+| Reached the model | Your last message, the automatic context and the tool results of the last turn | Never got it; got it but did not use it |
+
+Each stage shows what was found (your words highlighted; a source opens at its line) and what to do. **Copy the
+report** gives Markdown to paste in an issue: the question, the stages, the settings that differ from the defaults; no
+keys.
+
+**Settings in effect.** Every setting that decides what the model reads (model, code search, reading files, Atlas),
+with its value and where it comes from: *default*, *user*, *workspace* or *folder*. Then what the index on disk was
+built with, compared with the settings in use (chunk size, embedding model, how many chunks have vectors, their
+dimensions), the same for the Atlas (preset, rules, your list), and **names in your settings files that are not
+settings**, ignored without a word by VS Code, with the closest real name. **Test** checks the embedding model alone.
+
+**Reading and search check.** Small files made by hand with known content (Word, Excel, PDF, CSV, e-mail, Markdown)
+go through every stage, and the content is compared with what went in: “00123” stays “00123”, an empty cell stays
+empty (not “nan”), accents and amounts as written, each value whole in a chunk, the right passage first for a
+question, found by meaning too (with an embedding model), the company, its contact and its payment terms in the
+Atlas. **Also check the model** asks one small question from a passage. It takes about a second and sends nothing
+anywhere without that button. With `swarmLab.check.afterUpdates` (on), it runs again on its own after an update of
+Swarm Lab, a change of model or embedding model or chunk size, and you are told only if something fails.
+
+
+### Under every answer: what it was based on (0.48.5)
+
+One line under each answer says what it was based on: **🧭 Based on 3 files and 1 web page**, or **Based on the model’s
+own knowledge: no file was read** (fine for a general question; for one about your documents, it means they were not
+used). A **1 cited source not read** flag appears when the answer cites a source it never read. Tap the line to open the trace in
+place, under that answer; tap it again, press ✕, Esc, or **Close** at the bottom to close it. Nothing is sent anywhere:
+the trace is made from the steps the answer already recorded.
+
+| Part | What it shows | What to do with it |
+|---|---|---|
+| The sentence at the top | The one thing to take from it (nothing read, an unread citation, a search that found nothing, a failed step) | Act on it before reading the rest |
+| Sources | Every file, document and page the model got, as chips | Open one at its line and check the answer against it |
+| 1 You asked | Your message and its attached files | — |
+| 2 Added on its own | The passages Swarm Lab added before the model started, and memory used; or why nothing was added (code search off, adding off, skipped, nothing matched) | If the right file is missing here, use the document's words or attach it |
+| 3 It looked up | What the model chose to search, read or run, in order, with “nothing found” flagged | A search that found nothing points at the index or the words used |
+| 4 The model read | A bar of what was in front of the model (instructions, history, your message, your files and passages, memory), the model, the calls, the check and the citations | Only what is here can be in the answer |
+
+The first step with a problem opens first (arrows move between steps). **Is this answer wrong or incomplete?** at the
+bottom runs *Trace a question* for this answer's own turn, not only the last one: type a few words the right answer
+should contain, optionally pick one of the files it used, and the stages are shown in place. ⧉ copies the trace as
+Markdown; **🩺 Full check** opens the Check card.
+
+How it differs from the **citation check**: the citation check looks at what the answer *says* (is each `[source]` it
+cites real, and was it read?). The trace looks at what the answer was *given* (everything read, added and looked up,
+cited or not), so it also shows an answer that cites nothing and read nothing, and where the right text was lost.
+**Open the citation check** in step 4 opens the citation check of the same answer.

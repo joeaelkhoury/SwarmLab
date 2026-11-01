@@ -191,7 +191,24 @@ The startup line shows the version and the Studio address; `GET /v1/health` also
 | `messages` | `off` · `lead` · `all` | Review of messages between agents |
 | `timeoutSec` | `86400` | An unanswered request is rejected (expired) after this time |
 
-A job can tighten or loosen these with its own `approvals` field, for example `{"edits": "ask"}` for a sensitive repository. While a request waits, the job's status is **waiting**; cancelling the job rejects its open requests.
+A job can tighten these with its own `approvals` field, for example `{"edits": "ask"}` for a sensitive repository. Loosening them (for example `"commands": "auto"` when the server says `allowlist`, or allow-list entries such as `python` or `bash` that would run any code) needs an admin key, unless the configuration says `"approvalsLoosen": "submit"`. While a request waits, the job's status is **waiting**; cancelling the job rejects its open requests.
+
+#### Isolation: where a job's commands run
+
+| `isolation` | Where | Use it when |
+|---|---|---|
+| `venv` (default) | The worker machine, in the job's worktree, with the job's own Python virtual environment (first on PATH), temporary folder and caches | No Docker; fast (about 0.1 s to prepare) |
+| `docker` | A container of an image (`python:3.12` / `node:22` from the project, or `isolation.dockerImage`), the worktree at `/workspace`; the project's dependencies installed first | **Recommended** where Docker is installed: only the worktree is shared with the worker |
+| `machine` | The worker itself, as before 0.43.6 | Trusted, admin-only work (needs an admin key unless `isolation.machine` is `"submit"`) |
+| `existing` | The worker itself, in an existing virtual or conda environment: `isolation.existingPath` (relative to the repository's own folder), else `.venv`, `venv`, `env`, `.conda` there. Never created or deleted | A prepared environment on the server; admin key, like `machine` |
+
+Everything (the venv folder, the container, the worktree) is deleted at the end of the job. A job with its own `environment` (or a repository with `.swarmlab/environment.json`) keeps that environment unless the job also says `isolation`. In the configuration:
+
+```json
+"isolation": { "default": "docker", "allowed": ["venv", "docker"], "machine": "admin",
+  "existingPath": "", "dockerImage": "", "dockerNetwork": true, "installDependencies": "auto", "systemSitePackages": true, "isolatedHome": false },
+"approvalsLoosen": "admin"
+```
 
 ### 4.6 API keys and limits
 
@@ -317,6 +334,12 @@ A decision model such as Jev answers typed decisions (a choice, a score, a yes/n
 ```
 
 `policy` and `prompts` apply to this job only, over the repository's `.swarmlab/` files; they are checked when the job is submitted (an unknown role, a malformed agent, a prompt over 40,000 characters is refused with the reason). `memory`: jobs with the same `session` share memory (the progress note of the last job, its items, relevant topic and project items, within `memory.budgetTokens`); `false`: none. Server default: `"memory": { "mode": "notes" }` (the per-repository notes of earlier versions); `"scoped"` gives every job its own session (or the one it names); `"off"`. Scoped memory is kept per repository in `dataDir/memory-scoped/`.
+
+`instructions` (0.46) are added after every agent's own prompt in this job, as a harness's instructions are in VS
+Code: `"instructions": { "system": "Plan in three lines first.", "guardrails": "Never claim a test passes without
+running it.", "toolGuidance": "search_code first, then read_file.", "skills": ["debug-from-error"] }` (texts up to 4,000
+characters, skill names). A job with a `harness` takes them from it; the job's own `instructions` win. A harness saved
+by Harness → Refine runs the same on the server.
 
 ### 4.17 Profiles, MCP, skills, checks, hooks per job
 
@@ -515,6 +538,10 @@ Open the server's address in a browser and paste your API key (kept in that brow
 - **New job:** repository, organization, workflow, priority, task.
 - **Jobs:** status, filter by status; click one for its task, branch, pull request, diff summary, answer, error, tokens and cost, artifacts, **Cancel** or **Run again**, and the **live event log**.
 
+**/atlas** shows the Atlas of a local repository's documents (entity pages, graph, tables, timeline; MANUAL.md,
+section 64), and `POST /v1/atlas/build` builds it. **/today** shows your reminders and the agents' tasks of a local repository (`repos.<name>.path`), from its
+`.swarmlab` folder, the same files VS Code uses; see MANUAL.md, section 63. `/inbox` lists the decisions waiting for you.
+
 ---
 
 ## 7. Scale with PostgreSQL and Docker
@@ -556,7 +583,7 @@ The image contains Node, Git and Python. Add your projects' toolchains (for exam
 ## 8. Running it safely in a company
 
 - **Branches, not main:** every job's result is a branch (and a draft pull request); keep branch protection on `main`.
-- **Isolation:** each job works in its own worktree, and agents cannot reach `.git` or paths outside it. Commands still run with the worker's permissions, so run workers in **containers** with only the tools, network access and credentials they need. Prefer `commands: "allowlist"`.
+- **Isolation:** each job works in its own worktree, and agents cannot reach `.git` or paths outside it. With `isolation: "venv"` (default) commands still run with the worker's permissions; prefer `"isolation": {"default": "docker", "allowed": ["docker"]}` where Docker is installed, or run workers in **containers** with only the tools, network access and credentials they need. Prefer `commands: "allowlist"`. Agents cannot change the repository's control files (`.swarmlab/policy.json`, `mcp.json`, prompts, rules, workflows…).
 - **Untrusted input:** issue text and webhook payloads go into prompts; a malicious issue can try to steer agents (prompt injection). Use filters on triggers, keep pushes to draft pull requests, and keep `commands` on `allowlist`.
 - **Secrets:** environment variables or your secret manager; never in `swarmlab.server.json`, `.swarmlab/` or repositories. Keys are compared by sha256.
 - **Limits:** `limits` (queue, active jobs per key), per-job `tokenBudget` and `timeoutSec`, and `maxAttempts`.
