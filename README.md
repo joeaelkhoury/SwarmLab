@@ -16,8 +16,9 @@ need to configure agents, workflows, or a server to begin.
 
 **Created by Joe El Khoury.** Swarm Lab is released under the source-available [Swarm Lab License](https://github.com/joeaelkhoury/SwarmLab/blob/main/LICENSE): you may
 install, use and study it free of charge; copying, redistributing or republishing it, or a modified version, requires
-the author's written permission. The source code is published for transparency and review, not as an open-source
-license. Install it from Open VSX (publisher **joe-el-khoury**) or from a VSIX attached to a GitHub Release, and compare
+the author's written permission. The extension ships as a built package: this repository carries the documentation,
+screenshots and the Python client, not the extension's source code. Install it from Open VSX (publisher **joe-el-khoury**)
+or from a VSIX attached to a GitHub Release, and compare
 its SHA-256 with the `.sha256` file published beside it. See [NOTICE](https://github.com/joeaelkhoury/SwarmLab/blob/main/NOTICE.md) and
 [how to cite](https://github.com/joeaelkhoury/SwarmLab/blob/main/CITATION.cff).
 
@@ -43,8 +44,8 @@ visible, every edit and command is yours to approve, and nothing runs on a serve
 - **Run work safely.** Commands run in a sandbox (a venv, Docker, or an environment you choose); you see where.
 - **Your language.** The panel, settings and answers are available in French (technical terms stay in English).
 
-The code is published for transparency, but the extension you install is a single, self-contained build; you need no
-account, no configuration files and no server to begin. Just install it and open **Swarm Lab: Open**.
+The extension you install is a single, self-contained build; you need no account, no configuration files and no
+server to begin. Just install it and open **Swarm Lab: Open**.
 
 ## 2. Install and open
 

@@ -14,7 +14,7 @@ r.save_patch("fix.patch")
 
 ## 1. Install
 
-From the downloaded Python kit (or `clients/python` of the source):
+From the downloaded Python kit (or `clients/python` in this repository):
 
 ```bash
 pip install ./clients/python          # or: cd clients/python && pip install -e .

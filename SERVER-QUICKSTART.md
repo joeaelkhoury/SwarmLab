@@ -3,7 +3,7 @@
 ## Public VSIX users: start here, without source
 
 The public release supplies an installable VSIX, documentation, and Python starters;
-extension source publication is planned for a later update. No source ZIP or npm
+the extension's source code is not part of this repository. No source ZIP or npm
 build is required to run the native server bundled with the installed extension.
 Docker is optional.
 
@@ -293,7 +293,7 @@ For the full programmatic surface — the `RunSettings` fields, the `allowedSett
 
 ## Part C: use your VS Code setup on the server
 
-1. Install the extension: in VS Code, **Extensions → … → Install from VSIX…**, pick `swarm-lab-0.43.15.vsix` (example filename matching the current source version; no package is built by these instructions).
+1. Install the extension: in VS Code, **Extensions → … → Install from VSIX…**, pick `swarm-lab-0_59_1.vsix` from [Releases](https://github.com/joeaelkhoury/SwarmLab/releases) (example filename; no package is built by these instructions).
 2. Open the Swarm Lab panel → **Server** tab → **Server address** `http://127.0.0.1:8787` → **Save** → **Set API key**
    (a key with `approve` or `admin`) → **Test**.
 3. **Your setup on the server** → type a name (for example `team-default`) → **Export to the server**. It saves your

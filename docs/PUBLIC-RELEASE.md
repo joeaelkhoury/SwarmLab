@@ -1,15 +1,14 @@
-# Public release checklist: 0.43.15
+# Public release checklist: 0.59.1
 
 Canonical repository: <https://github.com/joeaelkhoury/SwarmLab>.
-Publisher remains **joe-el-khoury**. This checklist is a publication plan; it does
-not assert any upload has occurred. Do not push or upload as part of docs editing.
+Publisher remains **joe-el-khoury**. This checklist records the scope of the public
+repository and its releases; the 0.59.1 release followed it.
 
 ## Distribution scope
 
 The public release provides an installable VSIX, documentation, the Python client and
-examples, and the extension source code under the source-available Swarm Lab License.
-Users install the VSIX; building from source is for review and maintenance, and is not
-required to use Swarm Lab.
+examples. The extension's source code is not part of the public repository.
+Users install the VSIX; no source build is required to use Swarm Lab.
 The native server is available through the installed extension's Server tab;
 Docker is optional, not a requirement for Python use.
 
@@ -28,34 +27,47 @@ application so their direct links/imports remain useful:
 
 ```text
 README.md
+README.fr.md
+.gitignore
+CHANGELOG.md
+CITATION.cff
 LICENSE
 MANUAL.md
+MIGRATING.md
+NOTICE.md
 SERVER.md
 SERVER-QUICKSTART.md
-MIGRATING.md
-media/screenshot-chat.png
+docs/BEGINNER-WORKFLOW-ROADMAP.md
+docs/BENCHMARKS.md
+docs/DOCUMENTS.md
+docs/ENVIRONMENTS.md
 docs/GETTING-STARTED.md
+docs/PROGRAMMATIC-CONFIGURATION.md
+docs/PUBLIC-RELEASE.md
+docs/PYTHON-LIBRARY.md
 docs/PYTHON-WORKFLOWS.md
 docs/RUN-MODES.md
-docs/PUBLIC-RELEASE.md
-docs/PROGRAMMATIC-CONFIGURATION.md
-docs/PYTHON-LIBRARY.md
-docs/ENVIRONMENTS.md
+docs/WORKFLOW-HARNESS-STATUS.md
 docs/WORKFLOWS.md
+docs/images/job.png
+docs/images/tasks.png
+docs/images/working.png
+media/readme/            (the README screenshots, English and French)
+clients/README.md
 clients/python/README.md
-clients/python/swarmlab_client.py
-clients/python/fix_job.py
 clients/python/configuration_examples.py
 clients/python/example_app.py
-clients/python/workflow_demos.py
+clients/python/fix_job.py
+clients/python/pyproject.toml
+clients/python/swarmlab_client.py
+clients/python/test_swarmlab_package.py
 clients/python/test_workflow_demos.py
+clients/python/workflow_demos.py
 clients/python/demo_project/README.md
 clients/python/demo_project/.gitignore
-clients/python/demo_project/pricing.py
 clients/python/demo_project/labels.py
+clients/python/demo_project/pricing.py
 clients/python/demo_project/test_demo.py
-clients/python/pyproject.toml
-clients/python/test_swarmlab_package.py
 clients/python/swarmlab/__init__.py
 clients/python/swarmlab/__main__.py
 clients/python/swarmlab/cli.py
@@ -74,7 +86,7 @@ boundary explicitly. Check retained reference links before publication.
 
 ## Release assets, not Git files
 
-- Attach the locally prepared 0.43.15 VSIX to a GitHub Release, rather than committing
+- Attach the locally prepared 0.59.1 VSIX to a GitHub Release, rather than committing
   it to Git. A checksum may accompany the asset.
 - Verify the actual filename, version, publisher, installability, bundled native
   server, license, and third-party notices before uploading.
@@ -131,8 +143,8 @@ required license notices while reducing package contents.
 ## Pre-upload review
 
 - [ ] GitHub URLs use the canonical case above; publisher ID is unchanged.
-- [ ] Version is 0.43.15; LICENSE is the Swarm Lab License; NOTICE.md and CITATION.cff are included.
-- [ ] README states that the source is published under the Swarm Lab License (source-available, not open source).
+- [ ] Version is 0.59.1; LICENSE is the Swarm Lab License; NOTICE.md and CITATION.cff are included.
+- [ ] README states that the repository carries the documentation, screenshots and Python client, not the extension's source code (source-available Swarm Lab License).
 - [ ] Every allowlisted file exists; screenshot and starter-guide links resolve.
 - [ ] Downloaded Python neighbors import together without any source-tree imports.
 - [ ] Run offline list/dry-run checks from the starter folder, without a server.

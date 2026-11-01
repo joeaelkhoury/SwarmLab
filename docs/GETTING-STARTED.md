@@ -4,10 +4,11 @@
 
 ## 1. Install the public package
 
-Download the 0.43.15 VSIX from [GitHub Releases](https://github.com/joeaelkhoury/SwarmLab/releases).
+Download the 0.59.1 VSIX from [GitHub Releases](https://github.com/joeaelkhoury/SwarmLab/releases).
 Use VS Code **Extensions → ⋯ → Install from VSIX…**. Open a small practice folder,
 then run **Swarm Lab: Open** from the Command Palette. You do not need npm or
-extension source; the source is published for review under the Swarm Lab License.
+extension source; the public repository carries the documentation and the Python
+client, not the extension's source.
 
 ## 2. Choose how to learn
 
